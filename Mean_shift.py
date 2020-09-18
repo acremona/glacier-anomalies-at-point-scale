@@ -2,18 +2,18 @@ import numpy as np
 import cv2
 
 # import images
-imgname1 = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\Holfuy_Findel\\H_F_2020-07-27_15_44.jpg"
-imgname2 = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\Holfuy_Findel\\H_F_2020-07-27_16_04.jpg"
+imgname1 = "H_F_2020-07-27_15_44.jpg"
+imgname2 = "H_F_2020-07-27_16_04.jpg"
 img1 = cv2.imread(imgname1)
 img2 = cv2.imread(imgname2)
 
 # setup initial location of window
-c,r,w,h = 430,180,80,40                                                             # simply hardcoded the values (column, row, width, heigth)
-track_window = (c,r,w,h)
+c, r, w, h = 430, 180, 80, 40  # simply hardcoded the values (column, row, width, heigth)
+track_window = (c, r, w, h)
 
 # set up the ROI for tracking
-roi = img1[r:r+h, c:c+w]
-hsv_roi =  cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)                                     # change color from Blue Green Red to hsv type
+roi = img1[r:r + h, c:c + w]
+hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)  # change color from Blue Green Red to hsv type
 mask = cv2.inRange(hsv_roi, np.array((20., 100.,100.)), np.array((30.,255.,255.)))  # mask with yellow color
 roi_hist = cv2.calcHist([hsv_roi],[0],mask,[180],[0,180])                           # kind of characterization of roi
 cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)                              # normalize it to 255
