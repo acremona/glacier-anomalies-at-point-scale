@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 
+""" This programs takes two images and apply the meanshift algorithm to it to calculate the displacement of the tape stripes."""
+
 # import images
 imgname1 = "H_F_2020-07-27_15_44.jpg"
 imgname2 = "H_F_2020-07-27_16_04.jpg"
