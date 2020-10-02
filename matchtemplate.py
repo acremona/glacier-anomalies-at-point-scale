@@ -1,15 +1,16 @@
 import cv2
 import numpy as np
 import os
+import math
 
 ########################################################################################################
-path = "resources/1001_selection"           # change path to folder with images
+path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1002"           # change path to folder with images
 template = cv2.imread("resources/roi.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
-threshDuplicate = 20                        # threshold to find duplicates within matches (in pixel)
+threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 1                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
-wait = 0                                    # time between every frame in ms, 0 for manual scrolling
+wait = 100                                    # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
 
@@ -51,7 +52,7 @@ def find_collinear(points):
                         angle = np.arctan(dx/dy)*180/np.pi  # getting the angle of the connecting line between the 2 points
                         angles.append(angle)
 
-        density, bin_edges = np.histogram(angles, bins=range(0, int(round(max(angles))), 1)) # generating a histogram of all found angles
+        density, bin_edges = np.histogram(angles, bins=100) # generating a histogram of all found angles
         found_angle = bin_edges[np.argmax(density)]*np.pi/180                                # choose the highest density of calculated angles
 
         for point_a in points:
@@ -78,20 +79,24 @@ def remove_duplicates(points):
     :param points: list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
     :return: list of x and y coordinates of fewer points.
     """
-    counter = a = 0
+    a = 0
     filtered_matches = []
+    flags = []
     while a < len(points):
+        if a in flags:
+            a += 1
+            continue
         duplicates = []
         for b in range(len(points)):
-            if abs(points[a][0] - points[b][0]) < threshDuplicate and abs(points[a][1] - points[b][1]) < threshDuplicate:
+            d = math.sqrt((points[a][0] - points[b][0])**2 + (points[a][1] - points[b][1])**2)    # distance between 2 points
+            if d < threshDuplicate and a <= b:
                 duplicates.append(points[b])
-                counter += 1
+                flags.append(b)
         duplicates = np.array(duplicates)
         if len(duplicates) < 1:
             filtered_matches.append(points[a])
         else:
             filtered_matches.append(duplicates.mean(axis=0))
-        a = counter + 1
     return [arr.tolist() for arr in filtered_matches]   # transform numpy array to a list
 
 
@@ -130,9 +135,9 @@ for img in images:
     verticalMatches = find_collinear(filteredMatches)
     print("After collinearity check: " + str(len(verticalMatches)))
 
-    draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
-    draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 2)
-    draw_rectangle(img, verticalMatches, w, h, (255, 0, 0), 3)
+    # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
+    # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
+    draw_rectangle(img, verticalMatches, w, h, (255, 0, 0), 2)
     cv2.imshow("img", img)
     cv2.waitKey(wait)
 
