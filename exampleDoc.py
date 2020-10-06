@@ -29,3 +29,9 @@ def thirdSampleFunction():
     """
     return None
 
+def fourth_func():
+    """
+    fourth function
+    :return: None
+    """
+    return None
