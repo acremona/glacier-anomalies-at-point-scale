@@ -2,15 +2,16 @@ import cv2
 import numpy as np
 import os
 import math
+import matplotlib.pyplot as plt
 
 ########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1002"           # change path to folder with images
+path = "resources/1001_selection"           # change path to folder with images
 template = cv2.imread("resources/roi.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 1                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
-wait = 100                                    # time between every frame in ms, 0 for manual scrolling
+wait = 0                                    # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
 
@@ -40,36 +41,40 @@ def find_collinear(points):
     :return: list of x and y coordinates of points that are collinear.
     """
     angles = []
+    origins = []
     collinear_points = []
     if len(points) > 1:
         for point_a in points:
             for point_b in points:
-                if point_a is not point_b:                  # 2 loops comparing all points with each other
-                    dx = abs(point_a[0] - point_b[0])       # getting distance in x direction
-                    dy = abs(point_a[1] - point_b[1])       # getting distance in y direction
+                dx = abs(point_a[0] - point_b[0])       # getting distance in x direction
+                dy = abs(point_a[1] - point_b[1])       # getting distance in y direction
 
-                    if dy > 0:
-                        angle = np.arctan(dx/dy)*180/np.pi  # getting the angle of the connecting line between the 2 points
-                        angles.append(angle)
+                if dy > 0 and dx > 0:
+                    angle = np.arctan(dx/dy)      # getting the angle of the connecting line between the 2 points
+                    angles.append(angle*180/np.pi)
+                    if angle < 45*np.pi/180:
+                        origins.append(point_b[0]-point_b[1]*np.tan(angle))
 
-        density, bin_edges = np.histogram(angles, bins=100) # generating a histogram of all found angles
-        found_angle = bin_edges[np.argmax(density)]*np.pi/180                                # choose the highest density of calculated angles
+        density, bin_edges = np.histogram(angles, bins=100)     # generating a histogram of all found angles
+        found_angle = bin_edges[np.argmax(density)]*np.pi/180         # choose the highest density of calculated angles
+        density, bin_edges = np.histogram(origins, bins=100)     # generating a histogram of all found angles
+        found_origin = bin_edges[np.argmax(density)]
 
         for point_a in points:
-            for point_b in points:
-                if point_a is not point_b:                  # 2 loops comparing all points with each other
-                    dx = abs(point_a[0] - point_b[0])       # getting distance in x direction
-                    dy = abs(point_a[1] - point_b[1])       # getting distance in y direction
-                    if dy > 0:
-                        angle = np.arctan(dx/dy)            # getting the angle of the connecting line between the 2 points
-                        if abs(angle-found_angle) < threshAngle*np.pi/180:  # if the angle is close to the angle of the chosen line, the point lies on the line
-                            collinear_points.append(point_a)
-                            break                                           # if 1 pair of collinear points is found the iteration can be finished
+            for point_b in points:             # 2 loops comparing all points with each other
+                dx = abs(point_a[0] - point_b[0])       # getting distance in x direction
+                dy = abs(point_a[1] - point_b[1])       # getting distance in y direction
+                if dy > 0 and dx > 0:
+                    angle = np.arctan(dx/dy)                            # getting the angle of the connecting line between the 2 points
+                    origin = point_b[0]-point_b[1]*np.tan(angle)
+                    if abs(angle-found_angle) < threshAngle*np.pi/180 and abs(origin-found_origin) < 10:  # if the angle is close to the angle of the chosen line, the point lies on the line
+                        collinear_points.append(point_a)
+                        break                                           # if 1 pair of collinear points is found the iteration can be finished
 
-        tuple_transform = [tuple(l) for l in collinear_points]          # getting rid of duplicate point in the array by transforming into a tuple
-        return [t for t in (set(tuple(i) for i in tuple_transform))]    # and then creating a set (can only contain unique values) before transforming back to a list
+        tuple_transform = [tuple(l) for l in collinear_points]              # getting rid of duplicate point in the array by transforming into a tuple
+        return [t for t in (set(tuple(i) for i in tuple_transform))]        # and then creating a set (can only contain unique values) before transforming back to a list
     else:
-        return points                                                   # if 1 or less points is given as an argument, no collinear points can be found, so output=input
+        return points                                                       # if 1 or less points is given as an argument, no collinear points can be found, so output=input
 
 
 def remove_duplicates(points):
@@ -135,8 +140,8 @@ for img in images:
     verticalMatches = find_collinear(filteredMatches)
     print("After collinearity check: " + str(len(verticalMatches)))
 
-    # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
-    # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
+    draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
+    draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
     draw_rectangle(img, verticalMatches, w, h, (255, 0, 0), 2)
     cv2.imshow("img", img)
     cv2.waitKey(wait)
