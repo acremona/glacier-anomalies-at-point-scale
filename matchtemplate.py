@@ -5,8 +5,8 @@ import math
 import matplotlib.pyplot as plt
 
 ########################################################################################################
-path = "resources/1001_selection"           # change path to folder with images
-template = cv2.imread("resources/roi.jpg")  # change to path of RoI
+path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"           # change path to folder with images
+template = cv2.imread("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\roi.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
