@@ -5,12 +5,12 @@ import math
 import matplotlib.pyplot as plt
 
 ########################################################################################################
-path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"           # change path to folder with images
-template = cv2.imread("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\roi.jpg")  # change to path of RoI
+path = "resources/1001_selection"           # change path to folder with images
+template = cv2.imread("resources/roi.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
-threshAngle = 1                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
+threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
 wait = 0                                    # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
@@ -46,28 +46,27 @@ def find_collinear(points):
     if len(points) > 1:
         for point_a in points:
             for point_b in points:
-                dx = abs(point_a[0] - point_b[0])       # getting distance in x direction
-                dy = abs(point_a[1] - point_b[1])       # getting distance in y direction
+                dx = point_b[0] - point_a[0]       # getting distance in x direction
+                dy = point_b[1] - point_a[1]       # getting distance in y direction
 
-                if dy > 0 and dx > 0:
+                if dy != 0 and dx != 0:
                     angle = np.arctan(dx/dy)      # getting the angle of the connecting line between the 2 points
                     angles.append(angle*180/np.pi)
-                    if angle < 45*np.pi/180:
+                    if abs(angle) < 35*np.pi/180:
                         origins.append(point_b[0]-point_b[1]*np.tan(angle))
 
         density, bin_edges = np.histogram(angles, bins=100)     # generating a histogram of all found angles
         found_angle = bin_edges[np.argmax(density)]*np.pi/180         # choose the highest density of calculated angles
         density, bin_edges = np.histogram(origins, bins=100)     # generating a histogram of all found angles
         found_origin = bin_edges[np.argmax(density)]
-
         for point_a in points:
             for point_b in points:             # 2 loops comparing all points with each other
-                dx = abs(point_a[0] - point_b[0])       # getting distance in x direction
-                dy = abs(point_a[1] - point_b[1])       # getting distance in y direction
-                if dy > 0 and dx > 0:
+                dx = point_b[0] - point_a[0]       # getting distance in x direction
+                dy = point_b[1] - point_a[1]       # getting distance in y direction
+                if dy != 0 and dx != 0:
                     angle = np.arctan(dx/dy)                            # getting the angle of the connecting line between the 2 points
                     origin = point_b[0]-point_b[1]*np.tan(angle)
-                    if abs(angle-found_angle) < threshAngle*np.pi/180 and abs(origin-found_origin) < 10:  # if the angle is close to the angle of the chosen line, the point lies on the line
+                    if abs(angle-found_angle) < threshAngle*np.pi/180 and abs(origin-found_origin) < 20:  # if the angle is close to the angle of the chosen line, the point lies on the line
                         collinear_points.append(point_a)
                         break                                           # if 1 pair of collinear points is found the iteration can be finished
 
