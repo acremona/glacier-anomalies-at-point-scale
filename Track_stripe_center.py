@@ -91,7 +91,7 @@ def create_blue_mask(image):
 
 ############################
 path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"
-wait = 500
+wait = 0
 threshAngle = 1
 images = load_images_from_folder(path)
 ############################
