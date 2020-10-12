@@ -87,7 +87,7 @@ cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)                          
 cv2.normalize(roi_hist2,roi_hist2,0,255,cv2.NORM_MINMAX)
 
 # Setup the termination criteria, either 10 iteration or move by atleast 1 pt
-term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 5, 0)
+term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 15, 0)
 
 kernel = np.ones((2,2))
 kernel1 = np.ones((5,5))
@@ -112,7 +112,9 @@ for img in images:
     x3, y3, w, h = track_window3
 
     cv2.rectangle(img, (x1,y1), (x1+w,y1+h), 255,2)
+    cv2.putText(img, str(ret1), (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2, cv2.LINE_AA)
     cv2.rectangle(img, (x3,y3), (x3+w,y3+h), 255, 2)
+    cv2.putText(img, str(ret2), (x3, y3), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2, cv2.LINE_AA)
 
     # visualization of results
     cv2.imshow('mask2',mask2)

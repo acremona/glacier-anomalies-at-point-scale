@@ -17,7 +17,7 @@ threshSat = 0.8                             # threshold to match template in HSV
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 1                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
 wait = 0                                    # time between every frame in ms, 0 for manual scrolling
-h, w = 40,80
+h, w = 35,50
 ########################################################################################################
 
 def load_images_from_folder(folder):
@@ -36,11 +36,11 @@ def load_images_from_folder(folder):
     print("Images loaded")
     return images
 
-template = first_img[320:320 + h, 430:430 + w]
+template = first_img[320:320 + h, 445:445 + w]
+cv2.imshow("template",template)
 
 images = load_images_from_folder(path)
-matches = match_template(images,template)
-print(matches)
+matches = match_template(first_img,template)
 
 c = []
 r = []
@@ -57,7 +57,6 @@ roi1 = first_img[r[0]:r[0] + h, c[0]:c[0] + w]
 roi2 = first_img[r[1]:r[1] + h, c[1]:c[1] + w]
 track1 = c[0],r[0],w,h
 track2 = c[1],r[1],w,h
-print(track1)
 cv2.imshow("roi1",roi1)
 cv2.imshow("roi2",roi2)
 
