@@ -2,16 +2,16 @@ import cv2
 import numpy as np
 import os
 import math
-import matplotlib.pyplot as plt
+import pyqtgraph as pg
 
 ########################################################################################################
-path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"           # change path to folder with images
-template = cv2.imread("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\roi.jpg")  # change to path of RoI
+path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001"           # change path to folder with images
+template = cv2.imread("resources/roi.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
-wait = 800                                  # time between every frame in ms, 0 for manual scrolling
+wait = 100                                  # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
 
@@ -76,7 +76,7 @@ def find_collinear(points):
         return points                                                       # if 1 or less points is given as an argument, no collinear points can be found, so output=input
 
 
-def get_difference(newmatches, oldmatches):
+def get_distance(newmatches, oldmatches):
     """Detects the most common distance between 2 sets of points. This function is benefitial because all tape stripes
     on the pole are supposed to move the same amount of distance between 2 frames. Therefore, if as input all matches
     in the old frame and all matches in the new frame are chosen, the most common distance between all combination of points
@@ -151,6 +151,8 @@ template_sat = template_hsv[:, :, 1]                        # extracting only th
 all_matches = []                                            # list where all matches of all frames will be safed
 total_displacement = []                                     # list for plotting where all cumulative displacements will be stored
 all_lines = []                                              # list for visualizing displacements between consecutive frames
+x_coor = []
+pw = pg.plot()
 
 for frame_nr, img in enumerate(images):
     matches = []
@@ -190,13 +192,13 @@ for frame_nr, img in enumerate(images):
                 for old_point in all_matches[frame_nr-1]:  # plots a circle at the position where a match occured in the previous frame
                     cv2.circle(img, (int(round(old_point[0])), int(round(old_point[1]))), 2, (255, 255, 0), cv2.FILLED)
 
-                found_difference = round(get_difference(all_matches[-1], all_matches[-2]), 2) # get most common distance between current and previous frame
+                found_difference = get_distance(all_matches[-1], all_matches[-2]) # get most common distance between current and previous frame
                 print(found_difference)
+                x_coor.append(frame_nr)
                 if len(total_displacement) < 1:     # special case for the first frame
                     total_displacement.append(found_difference)
                 else:   # general case, add displacement of current frame to total displacements
                     total_displacement.append(total_displacement[-1] + found_difference)
-
                 for new in all_matches[-1]: # the following loops visualize the displacement between 2 consecutive frames
                     for old in all_matches[-2]:
                         if old[1] > new[1]: # only draw when the displacement is negative (glacier melts)
@@ -207,15 +209,18 @@ for frame_nr, img in enumerate(images):
                                     del all_lines[0]
                 for line in all_lines:
                     cv2.line(img, line[0], line[1], (0, 0, 255), 2)
+            else:
+                print("No matches in previous frame.")
+                found_difference = get_distance(all_matches[-1], all_matches[-3])
+                print(found_difference)
+                total_displacement.append(total_displacement[-1] + found_difference)
+                x_coor.append(frame_nr)
     else:
-        total_displacement.append(total_displacement[-1])
-        print("No matches found!")
+        print("No matches found in current frame!")
 
-    x = range(len(total_displacement))
-    plt.plot(x, total_displacement)
-    plt.show()
-    plt.pause(0.1)
-    plt.clf()
+    pw.plot(x_coor, total_displacement, clear=True)
+
+
     cv2.imshow("img", img)
 
     cv2.waitKey(wait)
