@@ -4,14 +4,12 @@ import os
 import matplotlib.pyplot as plt
 from matchtemplate_funct import match_template
 from manual_mask import create_red_mask,create_yellow_mask
+from automatic_mask import automatic_mask
 
 #############################################################
-path_first_img = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test\\2019-08-03_07-51.jpg"
-first_img = cv2.imread(path_first_img)
-h, w = 35,50
-template = first_img[320:320 + h, 445:445 + w]
+path_template = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\template.jpg"
+template = cv2.imread(path_template)
 #############################################################
-
 
 def mean_shift(roi1,roi2,images,track_window,track_window2):
     """Tracks two objects within a series of images.
@@ -37,16 +35,8 @@ def mean_shift(roi1,roi2,images,track_window,track_window2):
     hue, saturation, value = cv2.split(hsv_roi)
     hue2, saturation2, value2 = cv2.split(hsv_roi2)
 
-    plt.hist(hue, bins=100)
-    plt.title('histogram ROI 1')
-    plt.show()
-
-    plt.hist(hue2, bins=100)
-    plt.title('histogram ROI 2')
-    plt.show()
-
-    mask = create_red_mask(hsv_roi)
-    mask2 = create_yellow_mask(hsv_roi2)
+    mask = automatic_mask(hsv_roi)
+    mask2 = automatic_mask(hsv_roi2)
 
     roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180],[0, 180])  # kind of characterization of roi !!! provare mask = none
     roi_hist2 = cv2.calcHist([hsv_roi2], [0], mask2, [180], [0, 180])
@@ -57,7 +47,7 @@ def mean_shift(roi1,roi2,images,track_window,track_window2):
     term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 30, 1)
 
     kernel = np.ones((2, 2))
-    kernel1 = np.ones((5, 5))
+    kernel1 = np.ones((3, 3))
     ret1 = 1
     ret2 = 1
     for img in images:
@@ -67,10 +57,12 @@ def mean_shift(roi1,roi2,images,track_window,track_window2):
             dst = cv2.calcBackProject([hsv], [0, 1], roi_hist, [0, 180, 0, 256], 1)
             dst2 = cv2.calcBackProject([hsv], [0, 1], roi_hist2, [0, 180, 0, 256], 1)
             # Filtering and morphological transformation of backprojection
-            _, dst = cv2.threshold(dst, 0.6 * np.max(dst), 255, cv2.THRESH_TOZERO)
+            _, dst = cv2.threshold(dst, 0.85 * np.max(dst), 255, cv2.THRESH_TOZERO)
+            #dst = cv2.morphologyEx(dst, cv2.MORPH_CLOSE, kernel)
             dst = cv2.erode(dst, kernel)
             dst = cv2.dilate(dst, kernel1)
-            _, dst2 = cv2.threshold(dst2, 0.6 * np.max(dst2), 255, cv2.THRESH_TOZERO)
+            _, dst2 = cv2.threshold(dst2, 0.85 * np.max(dst2), 255, cv2.THRESH_TOZERO)
+            #dst2 = cv2.morphologyEx(dst2, cv2.MORPH_CLOSE, kernel)
             dst2 = cv2.erode(dst2, kernel)
             dst2 = cv2.dilate(dst2, kernel1)
             ret1, track_window1 = cv2.meanShift(dst, track_window,term_crit)  # apply meanshift to get the new location of the object
@@ -110,8 +102,8 @@ def mean_shift(roi1,roi2,images,track_window,track_window2):
             cv2.imshow("roi2", roi2)
             hsv_roi = cv2.cvtColor(roi1, cv2.COLOR_BGR2HSV)
             hsv_roi2 = cv2.cvtColor(roi2, cv2.COLOR_BGR2HSV)
-            mask = create_red_mask(hsv_roi)
-            mask2 = create_yellow_mask(hsv_roi2)
+            mask = automatic_mask(hsv_roi)
+            mask2 = automatic_mask(hsv_roi2)
             roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180],[0, 180])  # kind of characterization of roi !!! provare mask = none
             roi_hist2 = cv2.calcHist([hsv_roi2], [0], mask2, [180], [0, 180])
             cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)  # normalize it to 255
