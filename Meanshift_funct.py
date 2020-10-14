@@ -14,19 +14,25 @@ template = cv2.imread(path_template)
 def mean_shift(roi1,roi2,images,track_window,track_window2):
     """Tracks two objects within a series of images.
 
-    :param roi1: ndarray
-        Region of interest including the first object (stripe) to track
-    :param roi2: ndarray
+    Parameters
+    ----------
+    roi1: ndarray
+       Region of interest including the first object (stripe) to track
+    roi2: ndarray
         Region of interest including the second object (stripe) to track
-    :param images: list
-        List of images whithin the two objects are tracked
-    :param track_window: tuple:4
+    images: list
+        List of images within the two objects are tracked
+    track_window: tuple:4
         Initial search window for the first object
-    :param track_window2: tuple:4
+    track_window2: tuple:4
         Initial search window for the second object
-    :return: None
-        It have still to be changed!!
+
+    Returns
+    -------
+        None
+            It have still to be changed!!
     """
+
     print("[info] meanshift running ...")
     hsv_roi = cv2.cvtColor(roi1, cv2.COLOR_BGR2HSV)
     hsv_roi2 = cv2.cvtColor(roi2, cv2.COLOR_BGR2HSV)

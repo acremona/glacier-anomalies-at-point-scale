@@ -3,17 +3,23 @@ import cv2
 
 def automatic_mask(image):
     """Generate a mask with the most recurring color of an HSV image, based on the Hue values.
+
     Intervals: 0-20: red
                20-40: yellow
                40-70: green
                70-130: blue
                130-180: violett
 
-    :param image: ndarray
+    Parameters
+    ----------
+    image: ndarray
         Image for which the mask has to be created.
-    :return: ndarray
-        Mask containing the most recurrent color.
+    Returns
+    -------
+        ndarray
+            Mask containing the most recurrent color.
     """
+
     bins = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180] # do less color with differents range length an normalize?
     h1,bins = np.histogram(image, bins=bins)
     print("h1",h1)

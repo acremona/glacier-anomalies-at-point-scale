@@ -2,12 +2,16 @@ import numpy as np
 import cv2
 
 def create_yellow_mask(image):
-    """ Creates a mask for yellow.
+    """Creates a mask for yellow color.
 
-    :param image: ndarray
+    Parameters
+    ----------
+    image: ndarray
         Image of which the mask is wanted.
-    :return: ndarray
-        The mask for yellow color of the image.
+    Returns
+    -------
+        ndarray
+            The mask for yellow color of the image.
     """
     low_yellow = np.array([20., 80., 0.])
     upper_yellow = np.array([50., 255., 255.])
@@ -15,39 +19,57 @@ def create_yellow_mask(image):
     return mask
 
 def create_red_mask(image):
-    """ Creates a mask for red.
+    """Creates a mask for red color.
 
-    :param image: ndarray
+    Parameters
+    ----------
+    image: ndarray
         Image of which the mask is wanted.
-    :return: ndarray
-        The mask for red color of the image.
+
+    Returns
+    -------
+        ndarray
+            The mask for red color of the image.
     """
+
     low_red = np.array([0., 80., 0.])
     upper_red = np.array([10., 255., 255.])
     mask = cv2.inRange(image, low_red, upper_red)
     return mask
 
 def create_green_mask(image):
-    """ Creates a mask for green.
+    """Creates a mask for green color.
 
-    :param image: ndarray
+    Parameters
+    ----------
+    image: ndarray
         Image of which the mask is wanted.
-    :return: ndarray
-        The mask for red color of the image.
+
+    Returns
+    -------
+        ndarray
+            The mask for green color of the image.
     """
+
     low_green = np.array([50., 80., 0.])
     upper_green = np.array([70., 255., 255.])
     mask = cv2.inRange(image, low_green, upper_green)
     return mask
 
 def create_blue_mask(image):
-    """ Creates a mask for blue.
+    """Creates a mask for blue color.
 
-    :param image: ndarray
+    Parameters
+    ----------
+    image: ndarray
         Image of which the mask is wanted.
-    :return: ndarray
-        The mask for red color of the image.
+
+    Returns
+    -------
+        ndarray
+            The mask for blue color of the image.
     """
+
     low_blue = np.array([100., 80., 0.])
     upper_blue = np.array([165., 255., 255.])
     mask = cv2.inRange(image, low_blue, upper_blue)

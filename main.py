@@ -24,12 +24,17 @@ h,w = template.shape[0],template.shape[1]
 ########################################################################################################
 print(h,w)
 def load_images_from_folder(folder):
-    """
-    function loading all image files inside a specified folder.
+    """Function loading all image files inside a specified folder.
 
-    :param folder: path of the folder (string). can be a relative or absolute path.
-    :return: list of opencv images
+    Parameters
+    ----------
+    folder: string
+        Path of the folder. (Can be a relative or absolute path).
+    Returns
+    -------
+        list of opencv images
     """
+
     print("Images loading...")
     images = []
     for filename in os.listdir(folder):

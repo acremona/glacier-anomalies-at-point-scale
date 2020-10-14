@@ -14,14 +14,18 @@ def draw_rectangle(img, points, w, h, color, thickness):
 
 
 def match_template(im,temp):
-    """ Finds areas of an image that match (are similar) to a template image.
+    """Finds areas of an image that match (are similar) to a template image.
 
-    :param im: ndarray
-        (Source image) The image in which we expect to find a match to the template image.
-    :param temp: ndarray
+    Parameters
+    ----------
+    im: ndarray
+       (Source image) The image in which we expect to find a match to the template image.
+    temp: ndarray
         (Template image) The image which will be compared to the source image.
-    :return: list
-        The coordinates of the matching points found (Left uppermost corner of the ROI).
+    Returns
+    -------
+        list
+            The coordinates of the matching points found (Left uppermost corner of the ROI).
     """
 
     print("[info] matchtemplate running ...")
