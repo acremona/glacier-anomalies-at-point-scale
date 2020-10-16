@@ -2,7 +2,7 @@ import cv2
 import imutils
 import numpy as np
 import os
-
+from manual_mask import create_yellow_mask,create_red_mask,create_green_mask,create_blue_mask
 
 def load_images_from_folder(folder):
     """
@@ -64,30 +64,6 @@ def find_collinear(points):
     else:
         return points
 
-def create_yellow_mask(image):
-    low_yellow = np.array([20., 80., 0.])
-    upper_yellow = np.array([50., 255., 255.])
-    mask = cv2.inRange(image, low_yellow, upper_yellow)
-    return mask
-
-def create_red_mask(image):
-    low_red = np.array([0., 80., 0.])
-    upper_red = np.array([10., 255., 255.])
-    mask = cv2.inRange(image, low_red, upper_red)
-    return mask
-
-def create_green_mask(image):
-    low_green = np.array([50., 80., 0.])
-    upper_green = np.array([70., 255., 255.])
-    mask = cv2.inRange(image, low_green, upper_green)
-    return mask
-
-def create_blue_mask(image):
-    low_blue = np.array([100., 80., 0.])
-    upper_blue = np.array([140., 255., 255.])
-    mask = cv2.inRange(image, low_blue, upper_blue)
-    return mask
-
 
 ############################
 path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"
@@ -105,13 +81,13 @@ for img in images:
     maskg = create_green_mask(hsv)
     maskb = create_blue_mask(hsv)
 
-    mask = maskr + masky + maskg +maskb
+    mask = maskr + masky + maskg + maskb
 
-    kernel = np.ones((5,5))
-    kernel1 = np.ones((7,7))
+    #kernel = np.ones((5,5))
+    #kernel1 = np.ones((7,7))
 
-    mask = cv2.erode(mask,kernel)
-    mask = cv2.dilate(mask,kernel1)
+    #mask = cv2.erode(mask,kernel)
+    #mask = cv2.dilate(mask,kernel1)
 
     cv2.imshow("mask",mask)
 
@@ -124,7 +100,7 @@ for img in images:
         approx = cv2.approxPolyDP(c1,0.05*cv2.arcLength(c1,True),True)
         area1 = cv2.contourArea(approx)
 
-        if area1 > 1000 and area1 < 2500 and len(approx) == 4:
+        if area1 > 10:   #00 and area1 < 2500 and len(approx) == 4:
             cv2.drawContours(img,[approx],-1, (0,255,0),2)
             M1 = cv2.moments(c1)                                # va bene anche approx invece di c1?
             cx1 = int(M1["m10"]/M1["m00"])

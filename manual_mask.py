@@ -34,7 +34,9 @@ def create_red_mask(image):
 
     low_red = np.array([0., 80., 0.])
     upper_red = np.array([10., 255., 255.])
-    mask = cv2.inRange(image, low_red, upper_red)
+    low2 = np.array([170, 100., 0.])
+    up2 = np.array([180, 255., 255.])
+    mask = cv2.inRange(image, low_red, upper_red) + cv2.inRange(image, low2, up2)
     return mask
 
 def create_green_mask(image):
@@ -51,8 +53,8 @@ def create_green_mask(image):
             The mask for green color of the image.
     """
 
-    low_green = np.array([50., 80., 0.])
-    upper_green = np.array([70., 255., 255.])
+    low_green = np.array([40., 80., 0.])
+    upper_green = np.array([80., 255., 255.])
     mask = cv2.inRange(image, low_green, upper_green)
     return mask
 
@@ -70,7 +72,7 @@ def create_blue_mask(image):
             The mask for blue color of the image.
     """
 
-    low_blue = np.array([100., 80., 0.])
+    low_blue = np.array([90., 80., 0.])
     upper_blue = np.array([165., 255., 255.])
     mask = cv2.inRange(image, low_blue, upper_blue)
     return mask

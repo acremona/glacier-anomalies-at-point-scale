@@ -5,7 +5,7 @@ from remove_duplicates import remove_duplicates
 
 threshGray = 0.6  # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8  # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
-wait = 0  # time between every frame in ms, 0 for manual scrolling
+wait = 200  # time between every frame in ms, 0 for manual scrolling
 
 
 def draw_rectangle(img, points, w, h, color, thickness):
@@ -95,8 +95,8 @@ def match_template(im,temp):
         verticalMatches = find_collinear(filteredMatches)
 
         #print("After collinearity check: " + str(len(verticalMatches)))
-        verticalMatches = verticalMatches[0:2]                            #select the number of matches you want
-
+        verticalMatches = verticalMatches[0:3]                            #select the number of matches you want
+        print('matches',verticalMatches)
         if len(verticalMatches) > 0:
             #draw_rectangle(im, matches, w, h, (150, 250, 255), 1)
             #draw_rectangle(im, filteredMatches, w, h, (0, 255, 0), 1)
@@ -107,4 +107,3 @@ def match_template(im,temp):
             return verticalMatches
         else:
             print('Canot find any match') #!!! to change and quasi skip to next img
-            cv2.destroyAllWindows()

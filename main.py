@@ -10,8 +10,8 @@ from automatic_mask import automatic_mask
 
 ########################################################################################################
 path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"           # change path to folder with images
-path_template = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\template.jpg"
-path_first_img = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test\\2019-08-11_07-31.jpg"
+path_template = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\template_red.jpg"
+path_first_img = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test\\2019-07-30_12-51.jpg"
 first_img = cv2.imread(path_first_img)
 template = cv2.imread(path_template)
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
@@ -48,26 +48,39 @@ cv2.imshow("template",template)
 
 images = load_images_from_folder(path)
 matches = match_template(first_img,template)
+print(len(matches))
 
-c = []
-r = []
-for m in matches:
-    c.append(int(m[0]))
-    r.append(int(m[1]))
+#c = []
+#r = []
+roi = []
+track = []
+for i,m in enumerate(matches):
+    c = int(m[0])
+    r = int(m[1])
+    cv2.rectangle(first_img, (c, r), (c + w, r + h), 255, 2)
+    roi.append(first_img[r:r + h, c:c + w])
+    track.append((c, r, w, h))
+    #cv2.imshow("roi" + str(i), roi[i])
 
-cv2.rectangle(first_img, (c[0],r[0]), (c[0]+w,r[0]+h), 255,2)
-cv2.rectangle(first_img, (c[1],r[1]), (c[1]+w,r[1]+h), 255,2)
 
-cv2.imshow("first img",first_img)
 
-roi1 = first_img[r[0]:r[0] + h, c[0]:c[0] + w]
-roi2 = first_img[r[1]:r[1] + h, c[1]:c[1] + w]
-track1 = c[0],r[0],w,h
-track2 = c[1],r[1],w,h
-cv2.imshow("roi1",roi1)
-cv2.imshow("roi2",roi2)
 
-mean_shift(roi1,roi2,images,track1,track2)
+    #c.append(int(m[0]))
+    #r.append(int(m[1]))
+
+#cv2.rectangle(first_img, (c[0],r[0]), (c[0]+w,r[0]+h), 255,2)
+#cv2.rectangle(first_img, (c[1],r[1]), (c[1]+w,r[1]+h), 255,2)
+
+#roi1 = first_img[r[0]:r[0] + h, c[0]:c[0] + w]
+#roi2 = first_img[r[1]:r[1] + h, c[1]:c[1] + w]
+#track1 = c[0],r[0],w,h
+#track2 = c[1],r[1],w,h
+
+#cv2.imshow("first img",first_img)
+
+dy = mean_shift(roi,images,track)
+plt.plot(dy)
+plt.show()
 
 cv2.waitKey(wait)
 
