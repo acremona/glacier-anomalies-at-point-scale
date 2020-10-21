@@ -88,6 +88,30 @@ def find_collinear(points):
         return points                                                       # if 1 or less points is given as an argument, no collinear points can be found, so output=input
 
 
+def get_scale(points):
+    distances = []
+    scaled_distances = []
+    points.sort(key=lambda x: int(x[1]))                                     # sort matches by y coordinate
+    if len(points) > 1:
+        for a in range(len(points)-1):
+            for b in range(a+1, len(points)-1, 1):
+                dist = math.sqrt((points[a][0]-points[b][0])**2 + (points[a][1]-points[b][1])**2)
+                distances.append(dist)
+                # if b-a > 1:
+                #     distances.append(dist/2)
+                #     distances.append(dist/3)
+
+        density, bin_edges = np.histogram(distances, bins=np.arange(min(distances), max(distances) + 10, 10))  # generating a histogram of all found distances
+        diff = bin_edges[np.argmax(density)]
+
+        for dist in distances:
+            for c in range(int(round(dist/diff))):
+                if c > 0:
+                    scaled_distances.append(dist/c)
+    else:
+        print("Cannot calculate scale with less than 2 matches.")
+
+
 def get_distance(newmatches, oldmatches):
     """Detects the most common distance between 2 sets of points. This function is benefitial because all tape stripes
     on the pole are supposed to move the same amount of distance between 2 frames. Therefore, if as input all matches
