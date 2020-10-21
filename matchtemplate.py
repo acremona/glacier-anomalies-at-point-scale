@@ -3,6 +3,8 @@ import numpy as np
 import os
 import math
 import pyqtgraph as pg
+import matplotlib.pyplot as plt
+import datetime
 
 ########################################################################################################
 path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001"           # change path to folder with images
@@ -24,12 +26,22 @@ def load_images_from_folder(folder):
     """
     print("Images loading...")
     images = []
+    times = []
     for filename in os.listdir(folder):
         image = cv2.imread(os.path.join(folder, filename))
         if image is not None:
             images.append(image)
+            filename = filename.replace('_', '-')
+            time = list(map(int, filename.split('.')[0].split('-')))                # remove file ending (eg. .jpg) and split string into a list of y, m, d, h, s
+            dt = datetime.datetime(time[0], time[1], time[2], time[3], time[4])     # convert into datetime format
+            if len(times) == 0:                                                     # exception for first frame
+                first_time = dt.timestamp()                                         # convert datetime into seconds
+                times.append(0)
+            else:
+                times.append((dt.timestamp()-first_time)/3600)                      # get time difference from first frame in hours
+
     print("Images loaded")
-    return images
+    return images, times
 
 
 def find_collinear(points):
@@ -144,7 +156,7 @@ def draw_rectangle(img, points, w, h, color, thickness):
         cv2.rectangle(img, (int(round(point[0])), int(round(point[1]))), (int(round(point[0]))+w, int(round(point[1]))+h), color, thickness)
 
 
-images = load_images_from_folder(path)
+images, times = load_images_from_folder(path)
 template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
 template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
 template_sat = template_hsv[:, :, 1]                        # extracting only the saturation channel of the HSV template
