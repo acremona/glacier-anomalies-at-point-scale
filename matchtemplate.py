@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import datetime
 
 ########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001_selection"           # change path to folder with images
+path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001"           # change path to folder with images
 template = cv2.imread("resources/roi.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
@@ -131,21 +131,20 @@ def get_distance(newmatches, oldmatches):
             The most common distance between every single combination of the two given sets of coordinates.
     """
     differences = []
-    if len(newmatches) > 0:
-        if len(oldmatches) > 0:
+    diff = 0
+    if len(newmatches) > 1:
+        if len(oldmatches) > 1:
             for newmatch in newmatches:
                 for oldmatch in oldmatches:
                     if oldmatch[1] > newmatch[1]:
                         differences.append(math.sqrt((oldmatch[0]-newmatch[0])**2 + (oldmatch[1]-newmatch[1])**2))
             if len(differences) > 1:
-                density, bin_edges = np.histogram(differences, bins=np.arange(min(differences), max(differences) + 1, 1))  # generating a histogram of all found distances
+                density, bin_edges = np.histogram(differences, bins=np.arange(min(differences), max(differences) + threshTracking, threshTracking))  # generating a histogram of all found distances
                 diff = bin_edges[np.argmax(density)]                      # determining the bin with the highest amount of occurrences
-                if 0 < diff < 40:
-                    return diff
-                else:
-                    return 0
-            else:
-                return 0
+    if diff > 0:
+        return diff, diff+threshTracking
+    else:
+        return 0, 0
 
 
 def remove_duplicates(points):
@@ -176,27 +175,32 @@ def remove_duplicates(points):
     return [arr.tolist() for arr in filtered_matches]   # transform numpy array to a list
 
 
-def compare_matches(current_matches, old_matches, total_displacement, delta):
-    for old_match in old_matches:  # plots a circle at the position where a match occurred in the previous frame
-        cv2.circle(img, (int(round(old_match[0])), int(round(old_match[1]))), 2, (255, 255, 0), cv2.FILLED)
+def compare_matches(matches, delta):
+    displacement = 0
+    if delta < 20 and (delta < len(matches)-1 or delta < 2):
+        current_matches = matches[-1]
+        old_matches = matches[-1-delta]
+        differences = []
 
-    found_difference = get_distance(current_matches, old_matches)   # get most common distance between current and previous frame
-    try:                                                            # general case, add displacement of current frame to total displacements
-        total_displacement.append(total_displacement[-delta] + found_difference)
-    except IndexError:
-        total_displacement.append(found_difference)                 # special case for the first frame
-    for new in current_matches:                                     # the following loops visualize the displacement between 2 consecutive frames
-        for old in old_matches:
-            if old[1] > new[1]:                                     # only draw when the displacement is negative (glacier melts)
-                difference = math.sqrt((old[0] - new[0]) ** 2 + (old[1] - new[1]) ** 2)  # pythagoras (to-do: change to displacement in direction of pole only)
-                if abs(difference - found_difference) < threshTracking:  # if displacement is within 3 px of most common displacement, plot it
-                    all_lines.append([(int(round(old[0])), int(round(old[1]))), (int(round(new[0])), int(round(new[1])))])
-                    if len(all_lines) > 10:
-                        del all_lines[0]
-    for line in all_lines:
-        cv2.line(img, line[0], line[1], (0, 0, 255), 2)
-    print(str(delta) + "-frame displacement: " + str(found_difference) + "px. Total: " + str(total_displacement[-1]) + "px.")
-    return total_displacement
+        diff_lower, diff_upper = get_distance(current_matches, old_matches)   # get most common distance between current and previous frame
+        if diff_upper > 0:
+            for new in current_matches:                                     # the following loops visualize the displacement between 2 consecutive frames
+                for old in old_matches:
+                    if old[1] > new[1]:                                     # only draw when the displacement is negative (glacier melts)
+                        difference = math.sqrt((old[0] - new[0]) ** 2 + (old[1] - new[1]) ** 2)  # pythagoras (to-do: change to displacement in direction of pole only)
+                        if diff_lower < difference < diff_upper:  # if displacement is within 3 px of most common displacement, plot it
+                            cv2.line(img, (int(round(old[0])), int(round(old[1]))), (int(round(new[0])), int(round(new[1]))), (0, 0, 255), 2)
+                            differences.append(difference)
+                            cv2.circle(img, (int(round(old[0])), int(round(old[1]))), 2, (255, 255, 0), cv2.FILLED)
+        if len(differences) > 0 and np.average(differences) < 10*delta:
+            displacement = np.average(differences)
+            print(str(delta) + "-frame displacement found!")
+        else:
+            displacement, delta = compare_matches(matches, delta+1)
+    else:
+        print("No matches found within the last 10 frames!")
+        delta = 0
+    return displacement, delta
 
 
 def draw_rectangle(img, points, w, h, color, thickness):
@@ -209,7 +213,7 @@ template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into
 template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
 template_sat = template_hsv[:, :, 1]                        # extracting only the saturation channel of the HSV template
 all_matches = []                                            # list where all matches of all frames will be safed
-one_frame_displacement = []                                 # list for plotting where all cumulative displacements will be stored
+total_displacement = []                               # list for plotting where all cumulative displacements will be stored
 all_lines = []                                              # list for visualizing displacements between consecutive frames
 x = []                                                      # x coordinate for plotting
 win = pg.GraphicsWindow()                                   # initialize plotting
@@ -245,26 +249,23 @@ for frame_nr, img in enumerate(images):
     else:
         all_matches.append([])
 
-    if len(all_matches[-1]) > 0:                    # if there are matches in the current frame
+    if len(all_matches[-1]) > 1:                    # if there are matches in the current frame
         if frame_nr > 0:                            # special case for 1st frame because no displacement can be calculated there.
-            if len(all_matches[-2]) > 0:            # if there are matches in the previous frame.
-                one_frame_displacement = compare_matches(all_matches[-1], all_matches[-2], one_frame_displacement, 1)
-                if one_frame_displacement[-1] > 0:
-                    x.append(times[frame_nr])
+            frame_disp, delta = compare_matches(all_matches, 1)
+            if frame_disp > 0:
+                x.append(times[frame_nr])
+                if frame_nr > 1:
+                    prev_total = total_displacement[x.index(times[frame_nr-delta])]
+                    total_displacement.append(prev_total + frame_disp)
                 else:
-                    if frame_nr > 1 and len(all_matches[-3]) > 0:
-                        one_frame_displacement = compare_matches(all_matches[-1], all_matches[-3], one_frame_displacement, 2)
-                        x.append(times[frame_nr])
+                    total_displacement.append(frame_disp)
+                print("Displacement: " + str(frame_disp) + " px. Total: " + str(total_displacement[-1]) + " px.")
+                disp.setData(x, total_displacement, symbolBrush=('b'))
             else:
-                if frame_nr > 1 and len(all_matches[-3]) > 0:
-                    one_frame_displacement = compare_matches(all_matches[-1], all_matches[-3], one_frame_displacement, 2)
-                    x.append(times[frame_nr])
-            disp.setData(x, one_frame_displacement, symbolBrush=('b'))
-
+                print("No displacements found!")
     else:
         print("No matches found in current frame!")
 
     cv2.imshow("img", img)
     cv2.waitKey(wait)
 
-cv2.destroyAllWindows()
