@@ -95,7 +95,7 @@ def match_template(im,temp):
         verticalMatches = find_collinear(filteredMatches)
 
         #print("After collinearity check: " + str(len(verticalMatches)))
-        verticalMatches = verticalMatches[0:3]                            #select the number of matches you want
+        verticalMatches = verticalMatches[0:5]                            #select the number of matches you want
         print('matches',verticalMatches)
         if len(verticalMatches) > 0:
             #draw_rectangle(im, matches, w, h, (150, 250, 255), 1)

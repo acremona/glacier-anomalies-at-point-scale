@@ -241,7 +241,6 @@ win = pg.GraphicsWindow()                                   # initialize plottin
 pw = win.addPlot()
 disp = pw.plot()
 for frame_nr, img in enumerate(images):
-    print("-------- Frame "+str(frame_nr)+" --------")
     matches = []
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # turn image into grayscale
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)    # turn image into HSV
@@ -291,3 +290,4 @@ for frame_nr, img in enumerate(images):
     cv2.imshow("img", img)
     cv2.waitKey(wait)
 
+cv2.destroyAllWindows()
