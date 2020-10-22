@@ -7,23 +7,30 @@ import matplotlib.pyplot as plt
 import datetime
 
 ########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1003_selection"           # change path to folder with images
+path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1003"           # change path to folder with images
 template = cv2.imread("resources/roi3.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
 threshTracking = 3                          # threshold to catch match from last frame (in pixel)
-wait = 0                                  # time between every frame in ms, 0 for manual scrolling
+wait = 10                                  # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
 
 def load_images_from_folder(folder):
     """
-    function loading all image files inside a specified folder.
+    function loading all image files inside a specified folder. File names must contain date and time with delimiters - or _
 
-    :param folder: path of the folder (string). can be a relative or absolute path.
-    :return: list of opencv images
+    Parameters
+    ----------
+    folder : string
+        path of the folder (string). can be a relative or absolute path.
+
+    Returns
+    -------
+        list of opencv images
+        list of time differences to the first image in hours. e.g. [0, 0.5, 1.0, ...]
     """
     print("Images loading...")
     images = []
@@ -50,8 +57,16 @@ def find_collinear(points):
     This function searches for points that are collinear (on 1 straight line). If there are several lines, the one with
     the most points on it is chosen.
 
-    :param points: list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
-    :return: list of x and y coordinates of points that are collinear.
+    Parameters
+    ----------
+    points : list
+        list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
+
+    Returns
+    -------
+        list
+            [x, y]: list of coordinates of matches that are collinear
+            angle: the inclination of the pole
     """
     angles = []
     origins = []
@@ -66,9 +81,9 @@ def find_collinear(points):
                     dy = points[b][1] - points[a][1]       # getting distance in y direction
 
                     if dy != 0:
-                        angle = np.arctan(dx/dy)      # getting the angle of the connecting line between the 2 points
+                        angle = np.arctan(dx/dy)            # getting the angle of the connecting line between the 2 points
                         if abs(angle) < 35*np.pi/180:
-                            origins.append(points[b][0]-points[b][1]*np.tan(angle))
+                            origins.append(points[b][0]-points[b][1]*np.tan(angle))     # save angle and origin to a list, so the most common one can be picked later
                             angles.append(angle * 180 / np.pi)
         if len(angles) > 0:
             if len(angles) > 1:
@@ -82,34 +97,50 @@ def find_collinear(points):
         if len(origins) > 0:
             if len(origins) > 1:
                 density, bin_edges = np.histogram(origins, bins=np.arange(min(origins), max(origins) + 10, 10))     # generating a histogram of all found angles
-                found_origin = bin_edges[np.argmax(density)]
+                found_origin = bin_edges[np.argmax(density)]            # analog to angles
             else:
                 found_origin = origins[0]
         else:
             found_origin = 0
 
+        ####################################################################################
+        # found_origin and found_angle are the lower bounds of the most common bin.
+        # To increase accuracy, the average of all matches inside the bin is formed instead.
+        ####################################################################################
+
         for point_a in points:
-            for point_b in points:             # 2 loops comparing all points with each other
+            for point_b in points:                 # 2 loops comparing all points with each other
                 dx = point_b[0] - point_a[0]       # getting distance in x direction
                 dy = point_b[1] - point_a[1]       # getting distance in y direction
                 if dy != 0 and dx != 0:
                     angle = np.arctan(dx/dy)                            # getting the angle of the connecting line between the 2 points
                     origin = point_b[0]-point_b[1]*np.tan(angle)
-                    if found_angle < angle < found_angle + threshAngle*np.pi/180 and found_origin < origin < found_origin + 20:  # if the angle is close to the angle of the chosen line, the point lies on the line
+                    if found_angle < angle < found_angle + threshAngle*np.pi/180 and found_origin < origin < found_origin + 20:  # if the angle is close to the most common angle and the same for the origin, the match is considered to be on the pole
                         collinear_points.append(point_a)
                         bin_angles.append(angle)
                         break                                           # if 1 pair of collinear points is found the iteration can be finished
 
         if len(bin_angles) > 0 and len(collinear_points) > 0:
-            tuple_transform = [tuple(l) for l in collinear_points]              # getting rid of duplicate point in the array by transforming into a tuple
+            tuple_transform = [tuple(l) for l in collinear_points]              # getting rid of duplicate values in the array by transforming into a tuple
             return [t for t in (set(tuple(i) for i in tuple_transform))], np.average(bin_angles)        # and then creating a set (can only contain unique values) before transforming back to a list
         else:
             return [], 0
     else:
-        return [], 0                                                       # if 1 or less points is given as an argument, no collinear points can be found, so output=input
+        return [], 0           # if 1 or less points is given as an argument, no collinear points can be found
 
 
 def get_scale(points):
+    """
+    Function not finished yet.
+
+    Parameters
+    ----------
+    points
+
+    Returns
+    -------
+
+    """
     distances = []
     scaled_distances = []
     points.sort(key=lambda x: int(x[1]))                                     # sort matches by y coordinate
@@ -145,10 +176,14 @@ def get_distance(newmatches, oldmatches, angle):
         List of point coordinates (x, y)
     oldmatches : list
         List of point coordinates (x, y)
+    angle : float
+        The inclination of the pole (retrieved with the find_collinear function)
     Returns
     -------
-        float
-            The most common distance between every single combination of the two given sets of coordinates.
+        list
+            bin_lower: lower limit of where the most common displacements were found.
+            bin_upper: upper limit of where the most common displacements were found.
+
     """
     differences = []
     diff = 0
@@ -156,8 +191,10 @@ def get_distance(newmatches, oldmatches, angle):
         if len(oldmatches) > 1:
             for newmatch in newmatches:
                 for oldmatch in oldmatches:
-                    if oldmatch[1] - newmatch[1] > -5:
-                        differences.append((oldmatch[-1]-newmatch[-1])/np.cos(angle))
+                    if oldmatch[1] - newmatch[1] > -5:  # displacement should be positive (glacier melts).
+                                                        # > 0 is not chosen, because it causes problems in phases with close to 0 melting
+                                                        # => small negative displacements are allowed
+                        differences.append((oldmatch[-1]-newmatch[-1])/np.cos(angle))   # get displacement projected on pole, append to list to find most common displacement
             if len(differences) > 1:
                 density, bin_edges = np.histogram(differences, bins=np.arange(min(differences), max(differences) + threshTracking, threshTracking))  # generating a histogram of all found distances
                 diff = bin_edges[np.argmax(density)]                      # determining the bin with the highest amount of occurrences
@@ -171,8 +208,14 @@ def remove_duplicates(points):
     """
     This function is approximating points that are very close together into 1 single point
 
-    :param points: list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
-    :return: list of x and y coordinates of fewer points.
+    Parameters
+    ----------
+    points : list
+        list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
+
+    Returns
+    -------
+        list of x and y coordinates of fewer points.
     """
     a = 0
     filtered_matches = []
@@ -196,8 +239,26 @@ def remove_duplicates(points):
 
 
 def compare_matches(matches, inclination, delta):
+    """
+    This function compares the last two sets of points in a whole time series of points and calculates the displacement between those.
+    If no displacement can be calculated, it recursively tries to compare earlier points with the current one.
+
+    Parameters
+    ----------
+    matches : list
+        A 2d list containing several points for each time step. e.g. [[[x11, y11], [x12, y12]], [[x21, y21], [x22, y22]]]
+    inclination : float
+        Inclination angle of the pole in rad
+    delta : int
+        difference between the positions of the images that are compared. default is 1 (last image compared to second last).
+
+    Returns
+    -------
+        displacement between the frames in px.
+        delta to which frame the last frame was compared to.
+    """
     displacement = 0
-    if delta < 20 and (delta < len(matches)-1 or delta < 2):
+    if delta < 20 and (delta < len(matches)-1 or delta < 2):    # if no matches within the last 20 frames are found, the iteration is stopped.
         current_matches = matches[-1]
         old_matches = matches[-1-delta]
         differences = []
@@ -207,12 +268,11 @@ def compare_matches(matches, inclination, delta):
             for new in current_matches:                                     # the following loops visualize the displacement between 2 consecutive frames
                 for old in old_matches:
                     if old[1] - new[1] > -5:                                     # only draw when the displacement is negative (glacier melts)
-                        difference = (old[1] - new[1])/np.cos(inclination)  # pythagoras (to-do: change to displacement in direction of pole only)
-                        print(difference)
-                        if diff_lower < difference < diff_upper:  # if displacement is within 3 px of most common displacement, plot it
+                        difference = (old[1] - new[1])/np.cos(inclination)      # displacement projected to pole axis
+                        if diff_lower < difference < diff_upper:  # if displacement is close to most found displacement
                             differences.append(difference)
-                            cv2.circle(img, (int(round(old[0])), int(round(old[1]))), 2, (255, 255, 0), cv2.FILLED)
-                            cv2.circle(img, (int(round(new[0])), int(round(new[1]))), 2, (0, 0, 255), cv2.FILLED)
+                            cv2.circle(img, (int(round(old[0]+w/2)), int(round(old[1]+h/2))), 2, (255, 255, 0), cv2.FILLED) # plot current and previous matches for visualization
+                            cv2.circle(img, (int(round(new[0]+w/2)), int(round(new[1]+h/2))), 2, (0, 0, 255), cv2.FILLED)
         if len(differences) > 1 and np.average(differences) < 10*delta:
             displacement = np.average(differences)
             print(str(delta) + "-frame displacement found!")
@@ -225,7 +285,7 @@ def compare_matches(matches, inclination, delta):
 
 
 def draw_rectangle(img, points, w, h, color, thickness):
-    for count, point in enumerate(points):
+    for point in points:
         cv2.rectangle(img, (int(round(point[0])), int(round(point[1]))), (int(round(point[0]))+w, int(round(point[1]))+h), color, thickness)
 
 
@@ -262,8 +322,8 @@ for frame_nr, img in enumerate(images):
         filteredMatches = remove_duplicates(matches)
         collinearMatches, pole_inclination = find_collinear(filteredMatches)
         all_matches.append(collinearMatches)
-        draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
-        draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
+        # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
+        # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
         draw_rectangle(img, collinearMatches, w, h, (255, 0, 0), 1)
         # get_scale(collinearMatches)
     else:
@@ -272,7 +332,6 @@ for frame_nr, img in enumerate(images):
     if len(all_matches[-1]) > 1:                    # if there are matches in the current frame
         if frame_nr > 0:                            # special case for 1st frame because no displacement can be calculated there.
             frame_disp, delta = compare_matches(all_matches, pole_inclination, 1)
-            print([frame_disp, delta])
             if frame_disp != 0:
                 x.append(times[frame_nr])
                 if frame_nr > 1:
