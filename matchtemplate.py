@@ -7,14 +7,14 @@ import matplotlib.pyplot as plt
 import datetime
 
 ########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001"           # change path to folder with images
-template = cv2.imread("resources/roi.jpg")  # change to path of RoI
+path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1003_selection"           # change path to folder with images
+template = cv2.imread("resources/roi3.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
 threshTracking = 3                          # threshold to catch match from last frame (in pixel)
-wait = 100                                  # time between every frame in ms, 0 for manual scrolling
+wait = 0                                  # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
 
@@ -56,22 +56,38 @@ def find_collinear(points):
     angles = []
     origins = []
     collinear_points = []
+    bin_angles = []
+
     if len(points) > 1:
-        for point_a in points:
-            for point_b in points:
-                dx = point_b[0] - point_a[0]       # getting distance in x direction
-                dy = point_b[1] - point_a[1]       # getting distance in y direction
+        for a in range(len(points)):
+            if a < len(points)-1:
+                for b in range(a+1, len(points), 1):
+                    dx = points[b][0] - points[a][0]       # getting distance in x direction
+                    dy = points[b][1] - points[a][1]       # getting distance in y direction
 
-                if dy != 0 and dx != 0:
-                    angle = np.arctan(dx/dy)      # getting the angle of the connecting line between the 2 points
-                    angles.append(angle*180/np.pi)
-                    if abs(angle) < 35*np.pi/180:
-                        origins.append(point_b[0]-point_b[1]*np.tan(angle))
+                    if dy != 0:
+                        angle = np.arctan(dx/dy)      # getting the angle of the connecting line between the 2 points
+                        if abs(angle) < 35*np.pi/180:
+                            origins.append(points[b][0]-points[b][1]*np.tan(angle))
+                            angles.append(angle * 180 / np.pi)
+        if len(angles) > 0:
+            if len(angles) > 1:
+                density, bin_edges = np.histogram(angles, bins=np.arange(min(angles), max(angles) + threshAngle, threshAngle))     # generating a histogram of all found angles
+                found_angle = bin_edges[np.argmax(density)]*np.pi/180         # choose the highest density of calculated angles
+            else:
+                found_angle = angles[0]
+        else:
+            found_angle = 0
 
-        density, bin_edges = np.histogram(angles, bins=100)     # generating a histogram of all found angles
-        found_angle = bin_edges[np.argmax(density)]*np.pi/180         # choose the highest density of calculated angles
-        density, bin_edges = np.histogram(origins, bins=100)     # generating a histogram of all found angles
-        found_origin = bin_edges[np.argmax(density)]
+        if len(origins) > 0:
+            if len(origins) > 1:
+                density, bin_edges = np.histogram(origins, bins=np.arange(min(origins), max(origins) + 10, 10))     # generating a histogram of all found angles
+                found_origin = bin_edges[np.argmax(density)]
+            else:
+                found_origin = origins[0]
+        else:
+            found_origin = 0
+
         for point_a in points:
             for point_b in points:             # 2 loops comparing all points with each other
                 dx = point_b[0] - point_a[0]       # getting distance in x direction
@@ -79,14 +95,18 @@ def find_collinear(points):
                 if dy != 0 and dx != 0:
                     angle = np.arctan(dx/dy)                            # getting the angle of the connecting line between the 2 points
                     origin = point_b[0]-point_b[1]*np.tan(angle)
-                    if abs(angle-found_angle) < threshAngle*np.pi/180 and abs(origin-found_origin) < 20:  # if the angle is close to the angle of the chosen line, the point lies on the line
+                    if found_angle < angle < found_angle + threshAngle*np.pi/180 and found_origin < origin < found_origin + 20:  # if the angle is close to the angle of the chosen line, the point lies on the line
                         collinear_points.append(point_a)
+                        bin_angles.append(angle)
                         break                                           # if 1 pair of collinear points is found the iteration can be finished
 
-        tuple_transform = [tuple(l) for l in collinear_points]              # getting rid of duplicate point in the array by transforming into a tuple
-        return [t for t in (set(tuple(i) for i in tuple_transform))]        # and then creating a set (can only contain unique values) before transforming back to a list
+        if len(bin_angles) > 0 and len(collinear_points) > 0:
+            tuple_transform = [tuple(l) for l in collinear_points]              # getting rid of duplicate point in the array by transforming into a tuple
+            return [t for t in (set(tuple(i) for i in tuple_transform))], np.average(bin_angles)        # and then creating a set (can only contain unique values) before transforming back to a list
+        else:
+            return [], 0
     else:
-        return points                                                       # if 1 or less points is given as an argument, no collinear points can be found, so output=input
+        return [], 0                                                       # if 1 or less points is given as an argument, no collinear points can be found, so output=input
 
 
 def get_scale(points):
@@ -113,7 +133,7 @@ def get_scale(points):
         print("Cannot calculate scale with less than 2 matches.")
 
 
-def get_distance(newmatches, oldmatches):
+def get_distance(newmatches, oldmatches, angle):
     """Detects the most common distance between 2 sets of points. This function is beneficial because all tape stripes
     on the pole are supposed to move the same amount of distance between 2 frames. Therefore, if as input all matches
     in the old frame and all matches in the new frame are chosen, the most common distance between all combination of points
@@ -136,12 +156,12 @@ def get_distance(newmatches, oldmatches):
         if len(oldmatches) > 1:
             for newmatch in newmatches:
                 for oldmatch in oldmatches:
-                    if oldmatch[1] > newmatch[1]:
-                        differences.append(math.sqrt((oldmatch[0]-newmatch[0])**2 + (oldmatch[1]-newmatch[1])**2))
+                    if oldmatch[1] - newmatch[1] > -5:
+                        differences.append((oldmatch[-1]-newmatch[-1])/np.cos(angle))
             if len(differences) > 1:
                 density, bin_edges = np.histogram(differences, bins=np.arange(min(differences), max(differences) + threshTracking, threshTracking))  # generating a histogram of all found distances
                 diff = bin_edges[np.argmax(density)]                      # determining the bin with the highest amount of occurrences
-    if diff > 0:
+    if diff != 0:
         return diff, diff+threshTracking
     else:
         return 0, 0
@@ -175,30 +195,31 @@ def remove_duplicates(points):
     return [arr.tolist() for arr in filtered_matches]   # transform numpy array to a list
 
 
-def compare_matches(matches, delta):
+def compare_matches(matches, inclination, delta):
     displacement = 0
     if delta < 20 and (delta < len(matches)-1 or delta < 2):
         current_matches = matches[-1]
         old_matches = matches[-1-delta]
         differences = []
 
-        diff_lower, diff_upper = get_distance(current_matches, old_matches)   # get most common distance between current and previous frame
-        if diff_upper > 0:
+        diff_lower, diff_upper = get_distance(current_matches, old_matches, inclination)   # get most common distance between current and previous frame
+        if diff_upper != 0 and (times[frame_nr-delta] in x or frame_nr <=1):
             for new in current_matches:                                     # the following loops visualize the displacement between 2 consecutive frames
                 for old in old_matches:
-                    if old[1] > new[1]:                                     # only draw when the displacement is negative (glacier melts)
-                        difference = math.sqrt((old[0] - new[0]) ** 2 + (old[1] - new[1]) ** 2)  # pythagoras (to-do: change to displacement in direction of pole only)
+                    if old[1] - new[1] > -5:                                     # only draw when the displacement is negative (glacier melts)
+                        difference = (old[1] - new[1])/np.cos(inclination)  # pythagoras (to-do: change to displacement in direction of pole only)
+                        print(difference)
                         if diff_lower < difference < diff_upper:  # if displacement is within 3 px of most common displacement, plot it
-                            cv2.line(img, (int(round(old[0])), int(round(old[1]))), (int(round(new[0])), int(round(new[1]))), (0, 0, 255), 2)
                             differences.append(difference)
                             cv2.circle(img, (int(round(old[0])), int(round(old[1]))), 2, (255, 255, 0), cv2.FILLED)
-        if len(differences) > 0 and np.average(differences) < 10*delta:
+                            cv2.circle(img, (int(round(new[0])), int(round(new[1]))), 2, (0, 0, 255), cv2.FILLED)
+        if len(differences) > 1 and np.average(differences) < 10*delta:
             displacement = np.average(differences)
             print(str(delta) + "-frame displacement found!")
         else:
-            displacement, delta = compare_matches(matches, delta+1)
+            displacement, delta = compare_matches(matches, inclination, delta+1)
     else:
-        print("No matches found within the last 10 frames!")
+        print("No matches found within the last 20 frames!")
         delta = 0
     return displacement, delta
 
@@ -219,8 +240,8 @@ x = []                                                      # x coordinate for p
 win = pg.GraphicsWindow()                                   # initialize plotting
 pw = win.addPlot()
 disp = pw.plot()
-
 for frame_nr, img in enumerate(images):
+    print("-------- Frame "+str(frame_nr)+" --------")
     matches = []
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # turn image into grayscale
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)    # turn image into HSV
@@ -240,10 +261,10 @@ for frame_nr, img in enumerate(images):
     if len(matches) > 0:
         matches.sort(key=lambda y: int(y[1]))           # sort the matched points by y coordinate
         filteredMatches = remove_duplicates(matches)
-        collinearMatches = find_collinear(filteredMatches)
+        collinearMatches, pole_inclination = find_collinear(filteredMatches)
         all_matches.append(collinearMatches)
-        # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
-        # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
+        draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
+        draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
         draw_rectangle(img, collinearMatches, w, h, (255, 0, 0), 1)
         # get_scale(collinearMatches)
     else:
@@ -251,8 +272,9 @@ for frame_nr, img in enumerate(images):
 
     if len(all_matches[-1]) > 1:                    # if there are matches in the current frame
         if frame_nr > 0:                            # special case for 1st frame because no displacement can be calculated there.
-            frame_disp, delta = compare_matches(all_matches, 1)
-            if frame_disp > 0:
+            frame_disp, delta = compare_matches(all_matches, pole_inclination, 1)
+            print([frame_disp, delta])
+            if frame_disp != 0:
                 x.append(times[frame_nr])
                 if frame_nr > 1:
                     prev_total = total_displacement[x.index(times[frame_nr-delta])]
