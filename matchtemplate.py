@@ -129,39 +129,41 @@ def find_collinear(points):
         return [], 0           # if 1 or less points is given as an argument, no collinear points can be found
 
 
-def get_scale(points):
+def get_scale(points, scale_array):
     """
-    Function not finished yet.
+    Gets the most common distance between all matches in 1 frame.
+    Which corresponds to the distance between 2 tape stripes.
 
     Parameters
     ----------
-    points
-
+    points : list
+        list of all matches in a frame
+    scale_array : list
+        list of float numbers of scales from previous frames, so an average can be calculated
     Returns
     -------
-
+        float
+            the distance between 2 tape stripes
     """
-    distances = []
-    scaled_distances = []
-    points.sort(key=lambda x: int(x[1]))                                     # sort matches by y coordinate
+    scale = 0
     if len(points) > 1:
+        averages = []
         for a in range(len(points)-1):
             for b in range(a+1, len(points)-1, 1):
                 dist = math.sqrt((points[a][0]-points[b][0])**2 + (points[a][1]-points[b][1])**2)
-                distances.append(dist)
-                # if b-a > 1:
-                #     distances.append(dist/2)
-                #     distances.append(dist/3)
+                scale_array.append(dist)
 
-        density, bin_edges = np.histogram(distances, bins=np.arange(min(distances), max(distances) + 10, 10))  # generating a histogram of all found distances
+        density, bin_edges = np.histogram(scale_array, bins=np.arange(min(scale_array), max(scale_array) + 10, 10))  # generating a histogram of all found distances
         diff = bin_edges[np.argmax(density)]
-
-        for dist in distances:
-            for c in range(int(round(dist/diff))):
-                if c > 0:
-                    scaled_distances.append(dist/c)
+        for d in scale_array:
+            if diff < d < diff + 10:
+                averages.append(d)
+        if len(scale_array) > 100:
+            del scale_array[:-100]
+        scale = np.average(averages)
     else:
         print("Cannot calculate scale with less than 2 matches.")
+    return scale
 
 
 def get_distance(newmatches, oldmatches, angle):
@@ -289,6 +291,10 @@ def draw_rectangle(img, points, w, h, color, thickness):
         cv2.rectangle(img, (int(round(point[0])), int(round(point[1]))), (int(round(point[0]))+w, int(round(point[1]))+h), color, thickness)
 
 
+def px_to_cm(px, ref_cm, ref_px):
+    return px/ref_px*ref_cm
+
+
 images, times = load_images_from_folder(path)
 template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
 template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
@@ -297,6 +303,7 @@ all_matches = []                                            # list where all mat
 total_displacement = []                               # list for plotting where all cumulative displacements will be stored
 all_lines = []                                              # list for visualizing displacements between consecutive frames
 x = []                                                      # x coordinate for plotting
+scale_array = []
 win = pg.GraphicsWindow()                                   # initialize plotting
 pw = win.addPlot()
 disp = pw.plot()
@@ -325,7 +332,7 @@ for frame_nr, img in enumerate(images):
         # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
         # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
         draw_rectangle(img, collinearMatches, w, h, (255, 0, 0), 1)
-        # get_scale(collinearMatches)
+        scale = get_scale(collinearMatches, scale_array)
     else:
         all_matches.append([])
 
@@ -336,10 +343,10 @@ for frame_nr, img in enumerate(images):
                 x.append(times[frame_nr])
                 if frame_nr > 1:
                     prev_total = total_displacement[x.index(times[frame_nr-delta])]
-                    total_displacement.append(prev_total + frame_disp)
+                    total_displacement.append(prev_total + px_to_cm(frame_disp, 4, scale))
                 else:
-                    total_displacement.append(frame_disp)
-                print("Displacement: " + str(frame_disp) + " px. Total: " + str(total_displacement[-1]) + " px.")
+                    total_displacement.append(px_to_cm(frame_disp, 4, scale))
+                print("Displacement: " + str(px_to_cm(frame_disp, 4, scale)) + " px. Total: " + str(total_displacement[-1]) + " px.")
                 disp.setData(x, total_displacement, symbolBrush=('b'))
             else:
                 print("No displacements found!")
