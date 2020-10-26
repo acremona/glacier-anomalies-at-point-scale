@@ -88,13 +88,18 @@ def mean_shift(roi,images,track_window):
                     x1, y1, w, h = track_window1
                     new_y[i] = y1
                     track_window[i] = track_window1
-                    cv2.rectangle(img, (x1, y1), (x1 + w, y1 + h), 255, 2)
-                    cv2.putText(img,str(ret[i]),(x1,y1),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2, cv2.LINE_AA)
-                    cv2.rectangle(dst, (x1, y1), (x1 + w, y1 + h), 255, 2)
-                    cv2.putText(img,str(new_y[i]-old_y[i]),(x1,y1),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+                    if ret[i]!=0:
+                        cv2.rectangle(img, (x1, y1), (x1 + w, y1 + h), 255, 2)
+                        cv2.putText(img,str(ret[i]),(x1,y1),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2, cv2.LINE_AA)
+                        cv2.rectangle(dst, (x1, y1), (x1 + w, y1 + h), 255, 2)
+                        cv2.putText(img,str(new_y[i]-old_y[i]),(x1,y1),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
                     cv2.imshow('img', img)
                 dy = new_y - old_y
                 dy = np.where(ret != 0, dy, np.nan)
+                print('y old',old_y)
+                print('y new', new_y)
+                print('ret',ret)
+                print('dy',dy)
                 dy = np.nanmean(dy)
                 print('dy',dy)
             else:
@@ -141,8 +146,9 @@ def mean_shift(roi,images,track_window):
                         cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)  # normalize it to 255
                         cv2.rectangle(img, (c, r), (c + w, r + h), 255, 2)
                         ret1 = 1
+                dy = np.nan
         else:
-            if len(roi) == 33: #da cambiare visto che roi non è list e quindi len = 33 o qualcosa così
+            if len(roi) == 33: # if only one matches --> roi is not a list but an image, therefore len(roi)==33 ---> i thinck we could make it more elegant
                 if ret1 != 0:
                     dst = cv2.calcBackProject([hsv], [0, 1], roi_hist, [0, 180, 0, 256], 1)
                     _, dst = cv2.threshold(dst, 0.85 * np.max(dst), 255, cv2.THRESH_TOZERO)
@@ -205,7 +211,7 @@ def mean_shift(roi,images,track_window):
                             cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)  # normalize it to 255
                             cv2.rectangle(img, (c, r), (c + w, r + h), 255, 2)
                             ret1 = 1
-
+                    dy = np.nan
             else:
                 matches = match_template(img, template)
                 if not matches:
@@ -249,7 +255,7 @@ def mean_shift(roi,images,track_window):
                         cv2.rectangle(img, (c, r), (c + w, r + h), 255, 2)
                         ret1 = 1
                 dy = np.nan
-                dy = np.nanmean(dy)
+
         dy_list.append(dy)
         print('displ',dy_list[ii])
         cv2.waitKey(10)

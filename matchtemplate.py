@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import datetime
 
 ########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1003"           # change path to folder with images
-template = cv2.imread("resources/roi3.jpg")  # change to path of RoI
+path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"           # change path to folder with images
+template = cv2.imread("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\template_red.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
