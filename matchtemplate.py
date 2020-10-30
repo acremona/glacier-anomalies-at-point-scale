@@ -7,14 +7,14 @@ import matplotlib.pyplot as plt
 import datetime
 
 ########################################################################################################
-path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"           # change path to folder with images
-template = cv2.imread("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\template_red.jpg")  # change to path of RoI
+path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001"           # change path to folder with images
+template = cv2.imread("C:\\Users\joelb\\PycharmProjects\\real-time-glacier-mass-changes\\resources\\roi.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
 threshTracking = 3                          # threshold to catch match from last frame (in pixel)
-wait = 10                                  # time between every frame in ms, 0 for manual scrolling
+wait = 1                                  # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
 
@@ -29,7 +29,9 @@ def load_images_from_folder(folder):
 
     Returns
     -------
+    images : list
         list of opencv images
+    times : list of float
         list of time differences to the first image in hours. e.g. [0, 0.5, 1.0, ...]
     """
     print("Images loading...")
@@ -59,14 +61,15 @@ def find_collinear(points):
 
     Parameters
     ----------
-    points : list
+    points : list of tuple of float
         list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
 
     Returns
     -------
-        list
-            [x, y]: list of coordinates of matches that are collinear
-            angle: the inclination of the pole
+    collinear_points : list of tuple of float
+        list of coordinates of all matches that are collinear
+    angle : float
+        the inclination of the pole. returns 0 if no collinear matches.
     """
     angles = []
     origins = []
@@ -131,19 +134,20 @@ def find_collinear(points):
 
 def get_scale(points, scale_array):
     """
-    Gets the most common distance between all matches in 1 frame.
+    Gets the most common distance between all matches in 1 frame,
     Which corresponds to the distance between 2 tape stripes.
 
     Parameters
     ----------
-    points : list
+    points : list of tuple of float
         list of all matches in a frame
-    scale_array : list
+    scale_array : list of float
         list of float numbers of scales from previous frames, so an average can be calculated
+
     Returns
     -------
-        float
-            the distance between 2 tape stripes
+    scale : float
+        the distance between 2 tape stripes in px.
     """
     scale = 0
     if len(points) > 1:
@@ -174,18 +178,19 @@ def get_distance(newmatches, oldmatches, angle):
 
     Parameters
     ----------
-    newmatches : list
+    newmatches : list of tuple of float
         List of point coordinates (x, y)
-    oldmatches : list
+    oldmatches : list of tuple of float
         List of point coordinates (x, y)
     angle : float
         The inclination of the pole (retrieved with the find_collinear function)
+
     Returns
     -------
-        list
-            bin_lower: lower limit of where the most common displacements were found.
-            bin_upper: upper limit of where the most common displacements were found.
-
+    bin_lower : float
+        lower limit of where the most common displacements were found.
+    bin_upper : float
+        upper limit of where the most common displacements were found.
     """
     differences = []
     diff = 0
@@ -212,11 +217,12 @@ def remove_duplicates(points):
 
     Parameters
     ----------
-    points : list
+    points : list of tuple of float
         list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
 
     Returns
     -------
+    points: list of tuple of float
         list of x and y coordinates of fewer points.
     """
     a = 0
@@ -247,7 +253,7 @@ def compare_matches(matches, inclination, delta):
 
     Parameters
     ----------
-    matches : list
+    matches : list of tuple of float
         A 2d list containing several points for each time step. e.g. [[[x11, y11], [x12, y12]], [[x21, y21], [x22, y22]]]
     inclination : float
         Inclination angle of the pole in rad
@@ -256,8 +262,11 @@ def compare_matches(matches, inclination, delta):
 
     Returns
     -------
+    displacement : float
         displacement between the frames in px.
-        delta to which frame the last frame was compared to.
+
+    delta : int
+        to which frame the last frame was compared to.
     """
     displacement = 0
     if delta < 20 and (delta < len(matches)-1 or delta < 2):    # if no matches within the last 20 frames are found, the iteration is stopped.
@@ -287,11 +296,46 @@ def compare_matches(matches, inclination, delta):
 
 
 def draw_rectangle(img, points, w, h, color, thickness):
+    """
+    Draws a rectangles for a set of points
+
+    Parameters
+    ----------
+    img : opencv_image
+        The image where the recangles should be drawn
+    points : list of tuple of float
+        set of x and y coordinates
+    w : int
+        width of the rectangles
+    h : int
+        height of the recangles
+    color : tuple of int
+        color tuple in BGR
+    thickness : int
+        thickness of the drawn rectangle borders
+    """
     for point in points:
         cv2.rectangle(img, (int(round(point[0])), int(round(point[1]))), (int(round(point[0]))+w, int(round(point[1]))+h), color, thickness)
 
 
 def px_to_cm(px, ref_cm, ref_px):
+    """
+    Converts a number from px to cm according to defined scale.
+
+    Parameters
+    ----------
+    px : float
+        distance in px that is to be converted.
+    ref_cm : float
+        reference distance in cm.
+    ref_px : float
+        reference distance in px
+
+    Returns
+    -------
+    distance : float
+        converted distance in cm.
+    """
     return px/ref_px*ref_cm
 
 
@@ -346,7 +390,7 @@ for frame_nr, img in enumerate(images):
                     total_displacement.append(prev_total + px_to_cm(frame_disp, 4, scale))
                 else:
                     total_displacement.append(px_to_cm(frame_disp, 4, scale))
-                print("Displacement: " + str(px_to_cm(frame_disp, 4, scale)) + " px. Total: " + str(total_displacement[-1]) + " px.")
+                print("Displacement: " + str(px_to_cm(frame_disp, 4, scale)) + " cm. Total: " + str(total_displacement[-1]) + " cm.")
                 disp.setData(x, total_displacement, symbolBrush=('b'))
             else:
                 print("No displacements found!")
