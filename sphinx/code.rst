@@ -1,8 +1,14 @@
 Code documentation
 ==================
 
-.. automodule:: exampleDoc
+.. automodule:: matchtemplate
     :members:
 
-.. automodule:: matchtemplate
+.. automodule:: main
+    :members:
+
+.. automodule:: Meanshift_funct
+    :members:
+
+.. automodule:: matchtemplate_funct
     :members:
