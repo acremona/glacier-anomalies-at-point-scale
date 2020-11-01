@@ -2,3 +2,4 @@
 *.pyc
 /resources
 /venv
+/sphinx/_build
