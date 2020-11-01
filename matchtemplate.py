@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import datetime
 
 ########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001"           # change path to folder with images
-template = cv2.imread("C:\\Users\joelb\\PycharmProjects\\real-time-glacier-mass-changes\\resources\\roi.jpg")  # change to path of RoI
+path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1009"           # change path to folder with images
+template = cv2.imread("C:\\Users\joelb\\PycharmProjects\\real-time-glacier-mass-changes\\resources\\roi6.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
@@ -75,6 +75,7 @@ def find_collinear(points):
     origins = []
     collinear_points = []
     bin_angles = []
+    bin_origins = []
 
     if len(points) > 1:
         for a in range(len(points)):
@@ -121,10 +122,14 @@ def find_collinear(points):
                     if found_angle < angle < found_angle + threshAngle*np.pi/180 and found_origin < origin < found_origin + 20:  # if the angle is close to the most common angle and the same for the origin, the match is considered to be on the pole
                         collinear_points.append(point_a)
                         bin_angles.append(angle)
+                        bin_origins.append(origin)
                         break                                           # if 1 pair of collinear points is found the iteration can be finished
 
         if len(bin_angles) > 0 and len(collinear_points) > 0:
             tuple_transform = [tuple(l) for l in collinear_points]              # getting rid of duplicate values in the array by transforming into a tuple
+            o = np.average(bin_origins)
+            an = np.average(bin_angles)
+            cv2.line(img, (int(round(o)), 0), (int(round(o+500*np.tan(an))), 500), (0, 0, 255), 2)
             return [t for t in (set(tuple(i) for i in tuple_transform))], np.average(bin_angles)        # and then creating a set (can only contain unique values) before transforming back to a list
         else:
             return [], 0
@@ -401,3 +406,6 @@ for frame_nr, img in enumerate(images):
     cv2.waitKey(wait)
 
 cv2.destroyAllWindows()
+
+print(x)
+print(total_displacement)
