@@ -119,7 +119,7 @@ def find_collinear(points):
                 if dy != 0 and dx != 0:
                     angle = np.arctan(dx/dy)                            # getting the angle of the connecting line between the 2 points
                     origin = point_b[0]-point_b[1]*np.tan(angle)
-                    if found_angle < angle < found_angle + threshAngle*np.pi/180 and found_origin < origin < found_origin + 20:  # if the angle is close to the most common angle and the same for the origin, the match is considered to be on the pole
+                    if found_angle <= angle <= found_angle + threshAngle*np.pi/180 and found_origin <= origin <= found_origin + 20:  # if the angle is close to the most common angle and the same for the origin, the match is considered to be on the pole
                         collinear_points.append(point_a)
                         bin_angles.append(angle)
                         bin_origins.append(origin)
@@ -165,7 +165,7 @@ def get_scale(points, scale_array):
         density, bin_edges = np.histogram(scale_array, bins=np.arange(min(scale_array), max(scale_array) + 10, 10))  # generating a histogram of all found distances
         diff = bin_edges[np.argmax(density)]
         for d in scale_array:
-            if diff < d < diff + 10:
+            if diff <= d <= diff + 10:
                 averages.append(d)
         if len(scale_array) > 100:
             del scale_array[:-100]
@@ -285,11 +285,11 @@ def compare_matches(matches, inclination, delta):
                 for old in old_matches:
                     if old[1] - new[1] > -5:                                     # only draw when the displacement is negative (glacier melts)
                         difference = (old[1] - new[1])/np.cos(inclination)      # displacement projected to pole axis
-                        if diff_lower < difference < diff_upper:  # if displacement is close to most found displacement
+                        if diff_lower <= difference <= diff_upper:  # if displacement is close to most found displacement
                             differences.append(difference)
                             cv2.circle(img, (int(round(old[0]+w/2)), int(round(old[1]+h/2))), 2, (255, 255, 0), cv2.FILLED) # plot current and previous matches for visualization
                             cv2.circle(img, (int(round(new[0]+w/2)), int(round(new[1]+h/2))), 2, (0, 0, 255), cv2.FILLED)
-        if len(differences) > 1 and np.average(differences) < 10*delta:
+        if len(differences) > 0 and np.average(differences) < 10*delta:
             displacement = np.average(differences)
             print(str(delta) + "-frame displacement found!")
         else:
