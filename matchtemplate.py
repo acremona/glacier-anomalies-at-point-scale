@@ -191,6 +191,7 @@ def get_distance(newmatches, oldmatches, angle):
     on the pole are supposed to move the same amount of distance between 2 frames. Therefore, if as input all matches
     in the old frame and all matches in the new frame are chosen, the most common distance between all combination of points
     will be the displacement of the pole.
+    To be more precise, the distance projected to the pole is calculated (hence the pole inclination as input).
 
     Parameters
     ----------
@@ -229,7 +230,8 @@ def get_distance(newmatches, oldmatches, angle):
 
 def remove_duplicates(points):
     """
-    This function is approximating points that are very close together into 1 single point
+    This function is approximating points that are very close together into 1 single point.
+    If 2 or more points are close together (defined by a threshhold in px), the average x and y coordinates of all those points determine the result point.
 
     Parameters
     ----------
@@ -275,6 +277,7 @@ def compare_matches(matches, inclination, delta):
         Inclination angle of the pole in rad
     delta : int
         difference between the positions of the images that are compared. default is 1 (last image compared to second last).
+        delta is used to recursively iterate through past images to find good matches.
 
     Returns
     -------
@@ -282,7 +285,8 @@ def compare_matches(matches, inclination, delta):
         displacement between the frames in px.
 
     delta : int
-        to which frame the last frame was compared to.
+        end point of the recursive iteration. shows to which frame the last frame was compared to. Example: If the last frame is compared to the second last delta = 1.
+        delta is used to calculate the total displacement in a later step of the algorithm. The information is needed, so that the found displacement of the current time step can be added to the correct value of the cumulative displacement.
     """
     displacement = 0
     if delta < 20 and (delta < len(matches)-1 or delta < 2):    # if no matches within the last 20 frames are found, the iteration is stopped.
@@ -320,11 +324,11 @@ def draw_rectangle(img, points, w, h, color, thickness):
     img : opencv_image
         The image where the recangles should be drawn
     points : list of tuple of float
-        set of x and y coordinates
+        set of x and y coordinates. e.g. [(200, 100), (120, 150), ...]
     w : int
         width of the rectangles
     h : int
-        height of the recangles
+        height of the rectangles
     color : tuple of int
         color tuple in BGR
     thickness : int
@@ -336,7 +340,7 @@ def draw_rectangle(img, points, w, h, color, thickness):
 
 def px_to_cm(px, ref_cm, ref_px):
     """
-    Converts a number from px to cm according to defined scale.
+    Converts a number from px to cm according to a defined scale.
 
     Parameters
     ----------
