@@ -76,3 +76,23 @@ def create_blue_mask(image):
     upper_blue = np.array([165., 255., 255.])
     mask = cv2.inRange(image, low_blue, upper_blue)
     return mask
+
+
+def create_black_mask(image):
+    """Creates a mask for black color.
+
+    Parameters
+    ----------
+    image: ndarray
+        Image of which the mask is wanted.
+
+    Returns
+    -------
+        ndarray
+            The mask for black color of the image.
+    """
+
+    low_black = np.array([0., 0., 0.])
+    upper_black = np.array([180., 255.,50.])
+    mask = cv2.inRange(image, low_black, upper_black)
+    return mask

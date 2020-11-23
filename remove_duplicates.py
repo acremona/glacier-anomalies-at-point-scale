@@ -5,10 +5,17 @@ threshDuplicate = 25  # threshold to find duplicates within matches (in pixel)
 
 def remove_duplicates(points):
     """
-    This function is approximating points that are very close together into 1 single point.
+    This function is approximating points that are very close together into 1 single point
 
-    :param points: list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
-    :return: list of x and y coordinates of fewer points.
+    Parameters
+    ----------
+    points : list of tuple of float
+        list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
+
+    Returns
+    -------
+    points: list of tuple of float
+        list of x and y coordinates of fewer points.
     """
     a = 0
     filtered_matches = []
