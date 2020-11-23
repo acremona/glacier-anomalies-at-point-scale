@@ -289,7 +289,7 @@ def compare_matches(matches, inclination, delta):
         delta is used to calculate the total displacement in a later step of the algorithm. The information is needed, so that the found displacement of the current time step can be added to the correct value of the cumulative displacement.
     """
     displacement = 0
-    if delta < 20 and (delta < len(matches)-1 or delta < 2):    # if no matches within the last 20 frames are found, the iteration is stopped.
+    if delta < 40 and (delta < len(matches)-1 or delta < 2):    # if no matches within the last 20 frames are found, the iteration is stopped.
         current_matches = matches[-1]
         old_matches = matches[-1-delta]
         differences = []
@@ -297,9 +297,11 @@ def compare_matches(matches, inclination, delta):
         diff_lower, diff_upper = get_distance(current_matches, old_matches, inclination)   # get most common distance between current and previous frame
         if diff_upper != 0 and (times[frame_nr-delta] in x or frame_nr <=1):
             for new in current_matches:                                     # the following loops visualize the displacement between 2 consecutive frames
+                # h_new, s_new, v_new = get_colour(img, new[0], new[1], h, w)
                 for old in old_matches:
                     if old[1] - new[1] > -5:                                     # only draw when the displacement is negative (glacier melts)
                         difference = (old[1] - new[1])/np.cos(inclination)      # displacement projected to pole axis
+                        # h_old, s_old, v_old = get_colour(images[frame_nr-delta], old[0], old[1], h, w)
                         if diff_lower <= difference <= diff_upper:  # if displacement is close to most found displacement
                             differences.append(difference)
                             cv2.circle(img, (int(round(old[0]+w/2)), int(round(old[1]+h/2))), 2, (255, 255, 0), cv2.FILLED) # plot current and previous matches for visualization
@@ -313,6 +315,28 @@ def compare_matches(matches, inclination, delta):
         print("No matches found within the last 20 frames!")
         delta = 0
     return displacement, delta
+
+
+# def get_colour(image, x, y, h, w):
+#     x_round = int(round(x))
+#     y_round = int(round(y))
+#     roi = image[y_round+5:y_round+h+-5, x_round+3:x_round+w-3]
+#     channels = roi.transpose(2,0,1).reshape(3,-1)
+#     hue = np.median(channels[0])
+#     sat = np.median(channels[1])
+#     val = np.median(channels[2])
+#     return hue, sat, val
+#
+#
+# def compare_colors(hue1, sat1, val1, hue2, sat2, val2):
+#     diff_colors = True
+#     if sat1 > 40 and sat2 > 40:
+#         if abs(hue1-hue2) < 30 or abs(hue1-hue2) > 150:
+#             diff_colors = False
+#     else:
+#         if sat1 < 40 and sat2 < 40 and abs(val1-val2) < 50:
+#             diff_colors = False
+#     return diff_colors
 
 
 def draw_rectangle(img, points, w, h, color, thickness):
@@ -396,7 +420,7 @@ for frame_nr, img in enumerate(images):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # turn image into grayscale
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)    # turn image into HSV
     sat_img = hsv_img[:, :, 1]                        # extracting only the saturation channel of the HSV image
-    h, w = template_gray.shape                        # get width and height of image
+    h_tot, w_tot = gray_img.shape
 
     resultGray = cv2.matchTemplate(gray_img, template_gray, cv2.TM_CCOEFF_NORMED)
     locGray = np.where(resultGray >= threshGray)  # filter out bad matches
