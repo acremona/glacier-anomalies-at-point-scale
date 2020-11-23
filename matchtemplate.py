@@ -76,6 +76,7 @@ def find_collinear(points):
     collinear_points = []
     bin_angles = []
     bin_origins = []
+    result = []
 
     if len(points) > 1:
         for a in range(len(points)):
@@ -87,24 +88,19 @@ def find_collinear(points):
                     if dy != 0:
                         angle = np.arctan(dx/dy)            # getting the angle of the connecting line between the 2 points
                         if abs(angle) < 35*np.pi/180:
-                            origins.append(points[b][0]-points[b][1]*np.tan(angle))     # save angle and origin to a list, so the most common one can be picked later
+                            origins.append(points[b][0]+(h_tot - points[b][1])*np.tan(angle))     # save angle and origin to a list, so the most common one can be picked later
                             angles.append(angle * 180 / np.pi)
         if len(angles) > 0:
             if len(angles) > 1:
                 density, bin_edges = np.histogram(angles, bins=np.arange(min(angles), max(angles) + threshAngle, threshAngle))     # generating a histogram of all found angles
                 found_angle = bin_edges[np.argmax(density)]*np.pi/180         # choose the highest density of calculated angles
+                density, bin_edges = np.histogram(origins, bins=np.arange(min(origins), max(origins) + 10, 10))  # generating a histogram of all found angles
+                found_origin = bin_edges[np.argmax(density)]  # analog to angles
             else:
                 found_angle = angles[0]
-        else:
-            found_angle = 0
-
-        if len(origins) > 0:
-            if len(origins) > 1:
-                density, bin_edges = np.histogram(origins, bins=np.arange(min(origins), max(origins) + 10, 10))     # generating a histogram of all found angles
-                found_origin = bin_edges[np.argmax(density)]            # analog to angles
-            else:
                 found_origin = origins[0]
         else:
+            found_angle = 0
             found_origin = 0
 
         ####################################################################################
@@ -118,21 +114,22 @@ def find_collinear(points):
                 dy = point_b[1] - point_a[1]       # getting distance in y direction
                 if dy != 0 and dx != 0:
                     angle = np.arctan(dx/dy)                            # getting the angle of the connecting line between the 2 points
-                    origin = point_b[0]-point_b[1]*np.tan(angle)
+                    origin = point_b[0]+(h_tot - point_b[1])*np.tan(angle)
                     if found_angle <= angle <= found_angle + threshAngle*np.pi/180 and found_origin <= origin <= found_origin + 20:  # if the angle is close to the most common angle and the same for the origin, the match is considered to be on the pole
                         collinear_points.append(point_a)
                         bin_angles.append(angle)
                         bin_origins.append(origin)
                         break                                           # if 1 pair of collinear points is found the iteration can be finished
 
-        if len(bin_angles) > 0 and len(collinear_points) > 0:
-            tuple_transform = [tuple(l) for l in collinear_points]              # getting rid of duplicate values in the array by transforming into a tuple
+        if len(bin_angles) > 0:
             o = np.average(bin_origins)
             an = np.average(bin_angles)
-            cv2.line(img, (int(round(o)), 0), (int(round(o+500*np.tan(an))), 500), (0, 0, 255), 2)
-            return [t for t in (set(tuple(i) for i in tuple_transform))], np.average(bin_angles)        # and then creating a set (can only contain unique values) before transforming back to a list
-        else:
-            return [], 0
+            cv2.line(img, (int(round(o)), h_tot), (int(round(o-h_tot*np.tan(an))), 0), (0, 0, 255), 2)
+            tuple_transform = [tuple(l) for l in collinear_points]                    # getting rid of duplicate values in the array by transforming into a tuple
+            result = [t for t in (set(tuple(i) for i in tuple_transform))], an        # and then creating a set (can only contain unique values) before transforming back to a list
+
+    if len(result) > 0:
+        return result
     else:
         return [], 0           # if 1 or less points is given as an argument, no collinear points can be found
 
