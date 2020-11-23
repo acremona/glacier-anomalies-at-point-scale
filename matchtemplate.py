@@ -151,22 +151,36 @@ def get_scale(points, scale_array):
     scale : float
         the distance between 2 tape stripes in px.
     """
-    scale = 0
+    scale = rough_scale
+
     if len(points) > 1:
+        scale_array = []
         averages = []
         for a in range(len(points)-1):
-            for b in range(a+1, len(points)-1, 1):
+            for b in range(a+1, len(points), 1):
                 dist = math.sqrt((points[a][0]-points[b][0])**2 + (points[a][1]-points[b][1])**2)
                 scale_array.append(dist)
 
-        density, bin_edges = np.histogram(scale_array, bins=np.arange(min(scale_array), max(scale_array) + 10, 10))  # generating a histogram of all found distances
-        diff = bin_edges[np.argmax(density)]
-        for d in scale_array:
-            if diff <= d <= diff + 10:
-                averages.append(d)
-        if len(scale_array) > 100:
-            del scale_array[:-100]
-        scale = np.average(averages)
+        if frame_nr > 10:
+            for a in scale_array:
+                if a > rough_scale + 20 and (a % rough_scale < 10 or a % rough_scale > rough_scale-10):
+                    scale_array.append(a/2)
+        # scale_array = [value for value in scale_array if rough_scale - 15 < value < rough_scale + 15]
+
+        if len(scale_array) > 1:
+            density, bin_edges = np.histogram(scale_array, bins=np.arange(min(scale_array), max(scale_array) + 10, 10))  # generating a histogram of all found distances
+            diff = bin_edges[np.argmax(density)]
+            plt.hist(scale_array, bins=np.arange(min(scale_array), max(scale_array) + 10, 10))
+            plt.xlabel("Distance between pair of matches [px]")
+            plt.ylabel("Number of occurrences")
+            plt.show()
+
+            for d in scale_array:
+                if diff <= d <= diff + 10:
+                    averages.append(d)
+            if len(averages) > 0:
+                scale = np.average(averages)
+                print(scale)
     else:
         print("Cannot calculate scale with less than 2 matches.")
     return scale
@@ -345,15 +359,35 @@ images, times = load_images_from_folder(path)
 template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
 template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
 template_sat = template_hsv[:, :, 1]                        # extracting only the saturation channel of the HSV template
+template_canny = cv2.Canny(template_sat, 50, 100)
+h, w = template_gray.shape                                  # get width and height of template
+contours, _ = cv2.findContours(template_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+rough_scale = 0
+if len(contours) > 0:
+    contour = max(contours, key=cv2.contourArea)
+    _, _, _, rough_scale = cv2.boundingRect(contour)
+if h*2/3 < rough_scale < h:
+    rough_scale = rough_scale/1.9*4
+else:
+    rough_scale = h/1.9*3
+
+print(rough_scale)
+
 all_matches = []                                            # list where all matches of all frames will be safed
 total_displacement = []                               # list for plotting where all cumulative displacements will be stored
 all_lines = []                                              # list for visualizing displacements between consecutive frames
 x = []                                                      # x coordinate for plotting
 scale_array = []
+all_scales = []
 win = pg.GraphicsWindow()                                   # initialize plotting
 pw = win.addPlot()
+pc = win.addPlot()
 disp = pw.plot()
+sc = pc.plot()
+st_n = pc.plot()
+st_p = pc.plot()
 for frame_nr, img in enumerate(images):
+    print("========== Frame "+str(frame_nr)+" ==========")
     matches = []
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # turn image into grayscale
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)    # turn image into HSV
@@ -378,6 +412,7 @@ for frame_nr, img in enumerate(images):
         # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
         # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
         draw_rectangle(img, collinearMatches, w, h, (255, 0, 0), 1)
+        collinearMatches.sort(key=lambda y: int(y[1]))
         scale = get_scale(collinearMatches, scale_array)
     else:
         all_matches.append([])
@@ -387,6 +422,8 @@ for frame_nr, img in enumerate(images):
             frame_disp, delta = compare_matches(all_matches, pole_inclination, 1)
             if frame_disp != 0:
                 x.append(times[frame_nr])
+                all_scales.append(scale)
+                rough_scale = np.median(all_scales)
                 if frame_nr > 1:
                     prev_total = total_displacement[x.index(times[frame_nr-delta])]
                     total_displacement.append(prev_total + px_to_cm(frame_disp, 4, scale))
@@ -394,6 +431,12 @@ for frame_nr, img in enumerate(images):
                     total_displacement.append(px_to_cm(frame_disp, 4, scale))
                 print("Displacement: " + str(px_to_cm(frame_disp, 4, scale)) + " cm. Total: " + str(total_displacement[-1]) + " cm.")
                 disp.setData(x, total_displacement, symbolBrush=('b'))
+                sc.setData(x, all_scales, symbolBrush=('g'))
+                std = np.std(all_scales)
+                avg = np.average(all_scales)
+                st_n.setData([0, x[-1]], [avg - 1.5 * std, avg - 1.5 * std])
+                st_p.setData([0, x[-1]], [avg + 1.5 * std, avg + 1.5 * std])
+
             else:
                 print("No displacements found!")
     else:
