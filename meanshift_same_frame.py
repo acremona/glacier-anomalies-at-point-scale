@@ -8,11 +8,11 @@ import pyqtgraph as pg
 #path_template = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\template_1009_final_1.jpg"
 #template = cv2.imread(path_template)
 wait = 1
-threshold_positive = 0.02
-threshold_negative = -0.002
+threshold_positive = 1 #0.02
+threshold_negative = -1 #-0.002
 #############################################################
 
-def mean_shift_diff_frames(roi, images, track_window, hour, times, a, b, template, h, w):
+def mean_shift_same_frame(roi, images, track_window, hour, times, a, b,template, h, w):
     """Tracks two objects within a series of images.
 
     Parameters
@@ -53,8 +53,7 @@ def mean_shift_diff_frames(roi, images, track_window, hour, times, a, b, templat
     # Setup the termination criteria, either 10 iteration or move by atleast 1 pt
     term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0)
     kernel1 = np.ones((50, 50))
-    #print(roi is list,len(roi))
-    #print(type(roi))
+
     if isinstance(roi,list):
         ret = np.ones((len(roi)))
         roi_hist_list = []
@@ -74,12 +73,57 @@ def mean_shift_diff_frames(roi, images, track_window, hour, times, a, b, templat
 
     window_number = np.count_nonzero(ret)
     for ii, img in enumerate(images):
+
+        matches = match_template(img, template)
+        #print('frame', ii)
+
+        if not matches:
+            #print('[info] Cannot find any object')
+            count_no_matches = count_no_matches + 1
+            #print('count no matches', count_no_matches) # vedere se mettere roi = []
+            #roi = None
+
+        elif len(matches) > 1:
+            #print('[info] Found' + str(len(matches)) + 'objects')
+            roi_hist_list = []
+            roi = []
+            track_window = []
+            for j, mm in enumerate(matches):
+                c = int(mm[0])
+                r = int(mm[1])
+                roi.append(img[r:r + h, c:c + w])
+                track_window.append((c, r, w, h))
+                hsv_roi = cv2.cvtColor(roi[j], cv2.COLOR_BGR2HSV)
+                mask = create_yellow_mask(hsv_roi) + create_red_mask(hsv_roi) + create_green_mask(hsv_roi) + create_blue_mask(hsv_roi) + create_black_mask(hsv_roi)
+                roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
+                cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)  # normalize it to 255
+                roi_hist_list.append(roi_hist)
+            ret = np.ones(len(roi))
+            window_number = np.count_nonzero(ret)
+
+        else:
+            #print('[info] Found one object')
+            c = int(matches[0][0])
+            r = int(matches[0][1])
+            #cv2.rectangle(img, (c, r), (c + w, r + h), 255, 2)
+            roi = img[r:r + h, c:c + w]
+            track_window = (c, r, w, h)
+            hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+            mask = create_yellow_mask(hsv_roi) + create_red_mask(hsv_roi) + create_green_mask(hsv_roi) + create_blue_mask(hsv_roi) + create_black_mask(hsv_roi)
+            roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
+            roi_hist_list = roi_hist
+            cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)  # normalize it to 255
+            #cv2.rectangle(img, (c, r), (c + w, r + h), 255, 2)
+            ret = 1
+            window_number = 1
+
+
         x_coor.append(ii)
         x.append(times[ii])
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         mask_hsv = create_yellow_mask(hsv) + create_red_mask(hsv) + create_green_mask(hsv) + create_blue_mask(hsv) + create_black_mask(hsv)
         #print('[info] Tracking...')
-        if isinstance(roi,list):
+        if isinstance(matches,list):
             old_y = np.zeros(len(roi))
             new_y = np.zeros(len(roi))
             dst = [None] * len(roi)
@@ -134,81 +178,11 @@ def mean_shift_diff_frames(roi, images, track_window, hour, times, a, b, templat
                 count_nomatches_notrack = count_nomatches_notrack + 1
                 #print('count no matches no track ', count_nomatches_notrack)
 
-        elif roi is not None:
-            if ret != 0:
-                dst = cv2.calcBackProject([hsv], [0, 1], roi_hist_list, [0, 180, 0, 256], 1)
-                _, dst = cv2.threshold(dst, 0.85 * np.max(dst), 255, cv2.THRESH_TOZERO)
-                _, dst = cv2.threshold(dst, 0.5 * np.max(dst), 255, cv2.THRESH_BINARY)
-                dst = cv2.dilate(dst, kernel1)
-                dst = np.where(mask_hsv == 255, dst, 0)
-                old_y = track_window[1]
-                ret, track_window1 = cv2.meanShift(dst, track_window, term_crit)  # apply meanshift to get the new location of the object
-                x1, y1, w, h = track_window1
-                new_y = y1
-                track_window = track_window1
-                conversion_factor = a * (y1 + h / 2) + b
-                conversion_factor = 1.9/(conversion_factor*100)
-                #cv2.rectangle(img, (x1, y1), (x1 + w, y1 + h), 255, 2)
-                #cv2.putText(img, str(new_y - old_y), (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1,cv2.LINE_AA)
-                dy = old_y - new_y
-                dypx = dy
-                dy = dy * conversion_factor
-                std = 0
-
-                if dy < threshold_negative:
-                    dy = 0
-                if hour[ii] < 21 and hour[ii] > 6:
-                    if dy > threshold_positive:
-                        dy = 0
-
-            else:
-                #print('Tracking Object Lost...')
-                count_nomatches_notrack = count_nomatches_notrack + 1
-                #print('count no matches no track ', count_nomatches_notrack)
-
-        #recall matchtemplate and initialize variable
-        matches = match_template(img, template)
-        #print('frame', ii)
-
-        if not matches:
-            #print('[info] Cannot find any object')
-            count_no_matches = count_no_matches + 1
-            #print('count no matches', count_no_matches) # vedere se mettere roi = []
-            #roi = None
-
-        elif len(matches) > 1:
-            #print('[info] Found' + str(len(matches)) + 'objects')
-            roi_hist_list = []
-            roi = []
-            track_window = []
-            for j, mm in enumerate(matches):
-                c = int(mm[0])
-                r = int(mm[1])
-                roi.append(img[r:r + h, c:c + w])
-                track_window.append((c, r, w, h))
-                hsv_roi = cv2.cvtColor(roi[j], cv2.COLOR_BGR2HSV)
-                mask = create_yellow_mask(hsv_roi) + create_red_mask(hsv_roi) + create_green_mask(hsv_roi) + create_blue_mask(hsv_roi) + create_black_mask(hsv_roi)
-                roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
-                cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)  # normalize it to 255
-                roi_hist_list.append(roi_hist)
-            ret = np.ones(len(roi))
-            window_number = np.count_nonzero(ret)
-
         else:
-            #print('[info] Found one object')
-            c = int(matches[0][0])
-            r = int(matches[0][1])
-            #cv2.rectangle(img, (c, r), (c + w, r + h), 255, 2)
-            roi = img[r:r + h, c:c + w]
-            track_window = (c, r, w, h)
-            hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-            mask = create_yellow_mask(hsv_roi) + create_red_mask(hsv_roi) + create_green_mask(hsv_roi) + create_blue_mask(hsv_roi) + create_black_mask(hsv_roi)
-            roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
-            roi_hist_list = roi_hist
-            cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)  # normalize it to 255
-            #cv2.rectangle(img, (c, r), (c + w, r + h), 255, 2)
-            ret = 1
-            window_number = 1
+            #print('Tracking Object Lost...')
+            count_nomatches_notrack = count_nomatches_notrack + 1
+            #print('count no matches no track ', count_nomatches_notrack)
+            dy = 0
 
         dy = np.nan_to_num(dy)
         dy_list.append(dy)

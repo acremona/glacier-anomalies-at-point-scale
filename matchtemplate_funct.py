@@ -5,11 +5,11 @@ import math
 #from find_collinear import find_collinear
 #from remove_duplicates import remove_duplicates
 
-threshGray = 0.6  # threshold to match template in grayscale, 1 for perfect match, 0 for no match
+threshGray = 0.7  # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8  # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 wait = 2  # time between every frame in ms, 0 for manual scrolling
 threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
-threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
+threshDuplicate = 25                      # threshold to find duplicates within matches (in pixel)
 
 
 def draw_rectangle(img, points, w, h, color, thickness):
@@ -177,9 +177,11 @@ def match_template(im,temp):
     filteredMatches = remove_duplicates(matches)
     collinearMatches, pole_inclination = find_collinear(filteredMatches)
     print(len(collinearMatches))
+    #draw_rectangle(im, matches, w, h, (150, 250, 255), 1)
+    #draw_rectangle(im, filteredMatches, w, h, (0, 255, 0), 1)
+    #draw_rectangle(im, collinearMatches, w, h, (0, 0, 255), 1)
     #cv2.imshow('im',im)
-    #cv2.waitKey(0)
+    #cv2.waitKey(1)
     if len(collinearMatches) > 0:
         return collinearMatches
-    else:
-        print('Canot find any match')
+
