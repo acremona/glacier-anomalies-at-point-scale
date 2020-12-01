@@ -15,7 +15,7 @@ from manual_mask import create_red_mask,create_yellow_mask,create_blue_mask,crea
 from sklearn.linear_model import LinearRegression
 import pylab
 
-max_val_idx = 82
+max_val_idx = 88
 
 #datetime vector
 start_date = datetime.date(2019, 6, 28)
