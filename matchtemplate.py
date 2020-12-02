@@ -5,17 +5,7 @@ import math
 import pyqtgraph as pg
 import matplotlib.pyplot as plt
 import datetime
-
-########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1009"           # change path to folder with images
-template = cv2.imread("C:\\Users\joelb\\PycharmProjects\\real-time-glacier-mass-changes\\resources\\roi6.jpg")  # change to path of RoI
-threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
-threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
-threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
-threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
-threshTracking = 3                          # threshold to catch match from last frame (in pixel)
-wait = 1                                  # time between every frame in ms, 0 for manual scrolling
-########################################################################################################
+import csv
 
 
 def load_images_from_folder(folder):
@@ -124,7 +114,8 @@ def find_collinear(points):
         if len(bin_angles) > 0:
             o = np.average(bin_origins)
             an = np.average(bin_angles)
-            cv2.line(img, (int(round(o)), h_tot), (int(round(o-h_tot*np.tan(an))), 0), (0, 0, 255), 2)
+            if visualize:
+                cv2.line(res_img, (int(round(o)), h_tot), (int(round(o-h_tot*np.tan(an))), 0), (0, 0, 255), 2)
             tuple_transform = [tuple(l) for l in collinear_points]                    # getting rid of duplicate values in the array by transforming into a tuple
             result = [t for t in (set(tuple(i) for i in tuple_transform))], an        # and then creating a set (can only contain unique values) before transforming back to a list
 
@@ -305,11 +296,12 @@ def compare_matches(matches, inclination, delta):
                         # h_old, s_old, v_old = get_colour(images[frame_nr-delta], old[0], old[1], h, w)
                         if diff_lower <= difference <= diff_upper:  # if displacement is close to most found displacement
                             differences.append(difference)
-                            cv2.circle(img, (int(round(old[0]+w/2)), int(round(old[1]+h/2))), 2, (255, 255, 0), cv2.FILLED) # plot current and previous matches for visualization
-                            cv2.circle(img, (int(round(new[0]+w/2)), int(round(new[1]+h/2))), 2, (0, 0, 255), cv2.FILLED)
+                            if visualize:
+                                cv2.circle(res_img, (int(round(old[0]+w/2)), int(round(old[1]+h/2))), 2, (255, 255, 0), cv2.FILLED) # plot current and previous matches for visualization
+                                cv2.circle(res_img, (int(round(new[0]+w/2)), int(round(new[1]+h/2))), 2, (0, 0, 255), cv2.FILLED)
         if len(differences) > 0 and np.average(differences) < 10*delta:
             displacement = np.average(differences)
-            print(str(delta) + "-frame displacement found!")
+            # print(str(delta) + "-frame displacement found!")
         else:
             displacement, delta = compare_matches(matches, inclination, delta+1)
     else:
@@ -340,9 +332,9 @@ def compare_matches(matches, inclination, delta):
 #     return diff_colors
 
 
-def draw_rectangle(img, points, w, h, color, thickness):
+def draw_rectangle(image, points, w, h, color, thickness):
     """
-    Draws a rectangles for a set of points
+    Draws a rectangles for a set of points. This function is mainly for visualizing and debugging purposes.
 
     Parameters
     ----------
@@ -383,98 +375,140 @@ def px_to_cm(px, ref_cm, ref_px):
     """
     return px/ref_px*ref_cm
 
+def matchTemplate_hist(original_images, times, template_path, thresh, wait, vis=False, plotting=False):
 
-images, times = load_images_from_folder(path)
-template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
-template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
-template_sat = template_hsv[:, :, 1]                        # extracting only the saturation channel of the HSV template
-template_canny = cv2.Canny(template_sat, 50, 100)
-h, w = template_gray.shape                                  # get width and height of template
-contours, _ = cv2.findContours(template_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-rough_scale = 0
-if len(contours) > 0:
-    contour = max(contours, key=cv2.contourArea)
-    _, _, _, rough_scale = cv2.boundingRect(contour)
-if h*2/3 < rough_scale < h:
-    rough_scale = rough_scale/1.9*4
-else:
-    rough_scale = h/1.9*3
+    global h, w, rough_scale, threshTracking, threshDuplicate, threshAngle, frame_nr, h_tot, w_tot, x, res_img, visualize
+    ########################################################################################################
+    template = cv2.imread(template_path)  # change to path of RoI
+    threshGray = thresh                           # threshold to match template in grayscale, 1 for perfect match, 0 for no match
+    threshSat = thresh                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
+    threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
+    threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
+    threshTracking = 3                          # threshold to catch match from last frame (in pixel)
+    ########################################################################################################
 
-print(rough_scale)
-
-all_matches = []                                            # list where all matches of all frames will be safed
-total_displacement = []                               # list for plotting where all cumulative displacements will be stored
-all_lines = []                                              # list for visualizing displacements between consecutive frames
-x = []                                                      # x coordinate for plotting
-scale_array = []
-all_scales = []
-win = pg.GraphicsWindow()                                   # initialize plotting
-pw = win.addPlot()
-pc = win.addPlot()
-disp = pw.plot()
-sc = pc.plot()
-st_n = pc.plot()
-st_p = pc.plot()
-for frame_nr, img in enumerate(images):
-    print("========== Frame "+str(frame_nr)+" ==========")
-    matches = []
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # turn image into grayscale
-    hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)    # turn image into HSV
-    sat_img = hsv_img[:, :, 1]                        # extracting only the saturation channel of the HSV image
-    h_tot, w_tot = gray_img.shape
-
-    resultGray = cv2.matchTemplate(gray_img, template_gray, cv2.TM_CCOEFF_NORMED)
-    locGray = np.where(resultGray >= threshGray)  # filter out bad matches
-    for pt in zip(*locGray[::-1]):                # save all matches to a list
-        matches.append([pt[0], pt[1]])
-
-    resultSat = cv2.matchTemplate(sat_img, template_sat, cv2.TM_CCOEFF_NORMED)
-    locSat = np.where(resultSat >= threshSat)     # filter out bad matches
-    for pt in zip(*locSat[::-1]):                 # add all matches to the list
-        matches.append([pt[0], pt[1]])
-
-    if len(matches) > 0:
-        matches.sort(key=lambda y: int(y[1]))           # sort the matched points by y coordinate
-        filteredMatches = remove_duplicates(matches)
-        collinearMatches, pole_inclination = find_collinear(filteredMatches)
-        all_matches.append(collinearMatches)
-        # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
-        # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
-        draw_rectangle(img, collinearMatches, w, h, (255, 0, 0), 1)
-        collinearMatches.sort(key=lambda y: int(y[1]))
-        scale = get_scale(collinearMatches, scale_array)
+    visualize = vis
+    images = original_images
+    template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
+    template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
+    template_sat = template_hsv[:, :, 1]                        # extracting only the saturation channel of the HSV template
+    template_canny = cv2.Canny(template_sat, 50, 100)
+    h, w = template_gray.shape                                  # get width and height of template
+    contours, _ = cv2.findContours(template_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    rough_scale = 0
+    if len(contours) > 0:
+        contour = max(contours, key=cv2.contourArea)
+        _, _, _, rough_scale = cv2.boundingRect(contour)
+    if h*2/3 < rough_scale < h:
+        rough_scale = rough_scale/1.9*4
     else:
-        all_matches.append([])
+        rough_scale = h/1.9*3
 
-    if len(all_matches[-1]) > 1:                    # if there are matches in the current frame
-        if frame_nr > 0:                            # special case for 1st frame because no displacement can be calculated there.
-            frame_disp, delta = compare_matches(all_matches, pole_inclination, 1)
-            if frame_disp != 0:
-                x.append(times[frame_nr])
-                all_scales.append(scale)
-                rough_scale = np.median(all_scales)
-                if frame_nr > 1:
-                    prev_total = total_displacement[x.index(times[frame_nr-delta])]
-                    total_displacement.append(prev_total + px_to_cm(frame_disp, 4, scale))
+    all_matches = []                                            # list where all matches of all frames will be safed
+    total_displacement = []                                     # list for plotting where all cumulative displacements will be stored
+    daily_displacements = []
+    x = []                                                      # x coordinate for plotting
+    scale_array = []
+    all_scales = []
+    if plotting:
+        win = pg.GraphicsWindow()                                   # initialize plotting
+        pw = win.addPlot()
+        pc = win.addPlot()
+        disp = pw.plot()
+        sc = pc.plot()
+        st_n = pc.plot()
+        st_p = pc.plot()
+    for frame_nr, img in enumerate(images):
+        # print("========== Frame "+str(frame_nr)+" ==========")
+        matches = []
+        if visualize:
+            res_img = img.copy()
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # turn image into grayscale
+        hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)    # turn image into HSV
+        sat_img = hsv_img[:, :, 1]                        # extracting only the saturation channel of the HSV image
+        h_tot, w_tot = gray_img.shape
+
+        resultGray = cv2.matchTemplate(gray_img, template_gray, cv2.TM_CCOEFF_NORMED)
+        locGray = np.where(resultGray >= threshGray)  # filter out bad matches
+        for pt in zip(*locGray[::-1]):                # save all matches to a list
+            matches.append([pt[0], pt[1]])
+
+        resultSat = cv2.matchTemplate(sat_img, template_sat, cv2.TM_CCOEFF_NORMED)
+        locSat = np.where(resultSat >= threshSat)     # filter out bad matches
+        for pt in zip(*locSat[::-1]):                 # add all matches to the list
+            matches.append([pt[0], pt[1]])
+
+        if len(matches) > 0:
+            matches.sort(key=lambda y: int(y[1]))           # sort the matched points by y coordinate
+            filteredMatches = remove_duplicates(matches)
+            collinearMatches, pole_inclination = find_collinear(filteredMatches)
+            all_matches.append(collinearMatches)
+            if visualize:
+                # draw_rectangle(img, matches, w, h, (150, 250, 255), 1)
+                # draw_rectangle(img, filteredMatches, w, h, (0, 255, 0), 1)
+                draw_rectangle(res_img, collinearMatches, w, h, (255, 0, 0), 1)
+            collinearMatches.sort(key=lambda y: int(y[1]))
+            scale = get_scale(collinearMatches, scale_array)
+        else:
+            all_matches.append([])
+
+        if len(all_matches[-1]) > 1:                    # if there are matches in the current frame
+            if frame_nr > 0:                            # special case for 1st frame because no displacement can be calculated there.
+                frame_disp, delta = compare_matches(all_matches, pole_inclination, 1)
+                if frame_disp != 0:
+                    x.append(times[frame_nr])
+                    all_scales.append(scale)
+                    rough_scale = np.median(all_scales)
+                    if frame_nr > 1:
+                        prev_total = total_displacement[x.index(times[frame_nr-delta])]
+                        total_displacement.append(prev_total + px_to_cm(frame_disp, 4, scale))
+                        daily_displacements.append((frame_disp, x.index(times[frame_nr-delta])))
+                    else:
+                        total_displacement.append(px_to_cm(frame_disp, 4, scale))
+                        daily_displacements.append((frame_disp, 0))
+                    # print("Displacement: " + str(px_to_cm(frame_disp, 4, scale)) + " cm. Total: " + str(total_displacement[-1]) + " cm.")
+                    if plotting:
+                        disp.setData(x, total_displacement, symbolBrush=('b'))
+                        sc.setData(x, all_scales, symbolBrush=('g'))
+                        std = np.std(all_scales)
+                        avg = np.average(all_scales)
+                        st_n.setData([0, x[-1]], [avg - std, avg - std])
+                        st_p.setData([0, x[-1]], [avg + std, avg + std])
+
                 else:
-                    total_displacement.append(px_to_cm(frame_disp, 4, scale))
-                print("Displacement: " + str(px_to_cm(frame_disp, 4, scale)) + " cm. Total: " + str(total_displacement[-1]) + " cm.")
-                disp.setData(x, total_displacement, symbolBrush=('b'))
-                sc.setData(x, all_scales, symbolBrush=('g'))
-                std = np.std(all_scales)
-                avg = np.average(all_scales)
-                st_n.setData([0, x[-1]], [avg - 1.5 * std, avg - 1.5 * std])
-                st_p.setData([0, x[-1]], [avg + 1.5 * std, avg + 1.5 * std])
+                    print("No displacements found!")
+        else:
+            print("No matches found in current frame!")
 
-            else:
-                print("No displacements found!")
-    else:
-        print("No matches found in current frame!")
+        if visualize:
+            cv2.imshow("img", res_img)
+            cv2.waitKey(wait)
 
-    cv2.imshow("img", img)
-    cv2.waitKey(wait)
+    # cv2.destroyAllWindows()
 
-cv2.destroyAllWindows()
+    total_displacement, smooth_scales = clean_scales(daily_displacements, all_scales, 100)
+    return x, total_displacement, smooth_scales
 
-print(x)
-print(total_displacement)
+
+folder_path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001_selection"
+template_path = "resources/roi.jpg"
+
+image_array, times = load_images_from_folder(folder_path)
+x, total_displacement, scales = matchTemplate_hist(image_array, times, template_path, 0.69, 1)
+plt.plot(x, scales)
+plt.xlabel("timestep [h]")
+plt.ylabel("detected distance between tapes [px]")
+plt.show()
+plt.plot(x, total_displacement)
+plt.xlabel("timestep [h]")
+plt.ylabel("cumulative melt [cm]")
+plt.show()
+
+
+out = np.vstack((np.array(x), np.array(total_displacement), np.array(scales)))
+np.savetxt("output.csv", out, delimiter=",", fmt='%f')
+
+
+
+
+
