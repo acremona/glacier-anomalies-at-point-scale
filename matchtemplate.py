@@ -145,18 +145,17 @@ def get_scale(points, scale_array):
     scale = rough_scale
 
     if len(points) > 1:
-        scale_array = []
         averages = []
+        current_scale_array = []
         for a in range(len(points)-1):
             for b in range(a+1, len(points), 1):
                 dist = math.sqrt((points[a][0]-points[b][0])**2 + (points[a][1]-points[b][1])**2)
+                current_scale_array.append(dist)
                 scale_array.append(dist)
-
-        if frame_nr > 10:
-            for a in scale_array:
-                if a > rough_scale + 20 and (a % rough_scale < 10 or a % rough_scale > rough_scale-10):
+        if frame_nr > 50:
+            for a in current_scale_array:
+                if a > 1.5*rough_scale and (a % rough_scale < 10 or a % rough_scale > rough_scale-10):
                     scale_array.append(a/2)
-        # scale_array = [value for value in scale_array if rough_scale - 15 < value < rough_scale + 15]
 
         if len(set(scale_array)) > 1 and min(scale_array) < 80:
             density, bin_edges = np.histogram(scale_array, bins=np.arange(min(scale_array), 80, 20))  # generating a histogram of all found distances
@@ -166,11 +165,13 @@ def get_scale(points, scale_array):
                 diff = rough_scale
 
             for d in scale_array:
-                if diff <= d <= diff + 10:
+                if diff <= d <= diff + 15:
                     averages.append(d)
             if len(averages) > 0:
                 scale = np.average(averages)
-                print(scale)
+                # print(scale)
+            if len(scale_array) > 200:
+                del scale_array[:-200]
     else:
         print("Cannot calculate scale with less than 2 matches.")
     return scale
@@ -352,7 +353,34 @@ def draw_rectangle(image, points, w, h, color, thickness):
         thickness of the drawn rectangle borders
     """
     for point in points:
-        cv2.rectangle(img, (int(round(point[0])), int(round(point[1]))), (int(round(point[0]))+w, int(round(point[1]))+h), color, thickness)
+        cv2.rectangle(image, (int(round(point[0])), int(round(point[1]))), (int(round(point[0]))+w, int(round(point[1]))+h), color, thickness)
+
+
+def clean_scales(daily_disp, conversion_factors, boxlength):
+    clean_displacements = []
+    for i in range(len(conversion_factors)):
+        if abs(rough_scale-conversion_factors[i])>15:
+            conversion_factors[i] = rough_scale
+
+    if len(daily_disp) > 2*boxlength:
+        box = np.ones(boxlength) / boxlength
+        edge_correction = [rough_scale for i in range(boxlength)]
+        scale_temp = conversion_factors.copy()
+        scale_temp[:0] = edge_correction
+        scale_temp.extend(edge_correction)
+        scale_smooth = np.convolve(scale_temp, box, mode='same')
+        scale_smooth = scale_smooth[boxlength:-boxlength]
+    else:
+        scale_smooth = conversion_factors
+
+
+    for j in range(len(daily_disp)):
+        if j == 0:
+            clean_displacements.append(px_to_cm(daily_disp[j][0], 4, scale_smooth[j]))
+        else:
+            prev_total = clean_displacements[daily_disp[j][1]]
+            clean_displacements.append(prev_total+px_to_cm(daily_disp[j][0], 4, scale_smooth[j]))
+    return clean_displacements, scale_smooth
 
 
 def px_to_cm(px, ref_cm, ref_px):
@@ -364,9 +392,9 @@ def px_to_cm(px, ref_cm, ref_px):
     px : float
         distance in px that is to be converted.
     ref_cm : float
-        reference distance in cm.
+        reference distance in cm (e.g. distance between 2 tape stripes).
     ref_px : float
-        reference distance in px
+        reference distance in px (same reference as ref_cm)
 
     Returns
     -------
