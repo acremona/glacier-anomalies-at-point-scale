@@ -91,7 +91,7 @@ def find_collinear(points):
                             origins.append(points[b][0]+(h_tot - points[b][1])*np.tan(angle))     # save angle and origin to a list, so the most common one can be picked later
                             angles.append(angle * 180 / np.pi)
         if len(angles) > 0:
-            if len(angles) > 1:
+            if len(set(angles)) > 1:
                 density, bin_edges = np.histogram(angles, bins=np.arange(min(angles), max(angles) + threshAngle, threshAngle))     # generating a histogram of all found angles
                 found_angle = bin_edges[np.argmax(density)]*np.pi/180         # choose the highest density of calculated angles
                 density, bin_edges = np.histogram(origins, bins=np.arange(min(origins), max(origins) + 10, 10))  # generating a histogram of all found angles
@@ -167,13 +167,12 @@ def get_scale(points, scale_array):
                     scale_array.append(a/2)
         # scale_array = [value for value in scale_array if rough_scale - 15 < value < rough_scale + 15]
 
-        if len(scale_array) > 1:
-            density, bin_edges = np.histogram(scale_array, bins=np.arange(min(scale_array), max(scale_array) + 10, 10))  # generating a histogram of all found distances
-            diff = bin_edges[np.argmax(density)]
-            plt.hist(scale_array, bins=np.arange(min(scale_array), max(scale_array) + 10, 10))
-            plt.xlabel("Distance between pair of matches [px]")
-            plt.ylabel("Number of occurrences")
-            plt.show()
+        if len(set(scale_array)) > 1 and min(scale_array) < 80:
+            density, bin_edges = np.histogram(scale_array, bins=np.arange(min(scale_array), 80, 20))  # generating a histogram of all found distances
+            try:
+                diff = bin_edges[np.argmax(density)]
+            except:
+                diff = rough_scale
 
             for d in scale_array:
                 if diff <= d <= diff + 10:
@@ -218,8 +217,10 @@ def get_distance(newmatches, oldmatches, angle):
                     if oldmatch[1] - newmatch[1] > -5:  # displacement should be positive (glacier melts).
                                                         # > 0 is not chosen, because it causes problems in phases with close to 0 melting
                                                         # => small negative displacements are allowed
-                        differences.append((oldmatch[-1]-newmatch[-1])/np.cos(angle))   # get displacement projected on pole, append to list to find most common displacement
-            if len(differences) > 1:
+                        distance = (oldmatch[-1]-newmatch[-1])/np.cos(angle) # get displacement projected on pole
+                        if distance != 0:
+                            differences.append(distance)   #append to list to find most common displacement
+            if len(set(differences)) > 1:
                 density, bin_edges = np.histogram(differences, bins=np.arange(min(differences), max(differences) + threshTracking, threshTracking))  # generating a histogram of all found distances
                 diff = bin_edges[np.argmax(density)]                      # determining the bin with the highest amount of occurrences
     if diff != 0:
