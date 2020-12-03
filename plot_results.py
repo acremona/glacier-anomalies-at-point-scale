@@ -32,15 +32,15 @@ def aggregate_2_daily(time, time_val, dy_cum_min):
     return daily_dy, daily_rate
 
 ##################################
-max_val_idx = 52
+max_val_idx = 51
 threshold = -0.002
 
 #datetime vector
-start_date = datetime.date(2019, 8, 13)
-start_min = datetime.datetime(2019, 8, 12, 17, 10)
+start_date = datetime.date(2019, 8, 14)
+start_min = datetime.datetime(2019, 8, 13, 12, 34)
 temp_date = start_date
 delta_day = datetime.timedelta(days=1)
-data = pd.read_excel("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1006.xlsx",sheet_name='Final')
+data = pd.read_excel("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1009.xlsx",sheet_name='Final')
 ###################################
 
 # import data from excel
@@ -114,7 +114,7 @@ fig, axs = plt.subplots(2, 1, gridspec_kw={'height_ratios': [2, 1]})
 labels = ['Template 1', 'Template 2', 'Template 3', 'Mean']
 
 bp_dict = axs[1].boxplot(errors, vert=True, patch_artist=True, showfliers=False,labels=labels,widths=(0.2, 0.2, 0.2, 0.2))
-axs[1].set_ylabel('Daily errors [cm]')
+axs[1].set_ylabel('Daily errors [cm]',fontsize='medium', fontweight= 'heavy')
 
 for i, line in enumerate(bp_dict['medians']):
     # get position data for median line
@@ -158,18 +158,16 @@ axs[0].xaxis.set_major_locator(mdates.DayLocator(interval=5))
 #axs[0].rc('xtick', labelsize=25)
 #axs[0].rc('ytick', labelsize=25)
 
-axs[0].set_ylabel('Displacement [m]')#,fontsize='large',fontweight= 'heavy')
+axs[0].set_ylabel('Displacement [m]',fontsize='medium', fontweight= 'heavy')
 
 axs[0].legend(loc='upper left', shadow=False, fontsize='small')
 axs[0].grid(axis='y', color='gray', linestyle=':', linewidth=0.5)
-plt.savefig('1006_w_bp.png')
+plt.savefig('1009_w_bp.png')
 plt.show()
 
-###################################################################
 writer = pd.ExcelWriter('temp.xlsx', engine='xlsxwriter')
 df = pd.DataFrame({'time': time, 'min rate1': rate1, 'min rate2': rate2, 'min rate3': rate3, 'dy cum 1':dy_cum_1_thresh, 'dy cum 2':dy_cum_2_thresh, 'dy cum 3':dy_cum_3_thresh, 'dy cum mean':dy_mean_thresh})
 df.to_excel(writer, sheet_name='Data')
 df1 = pd.DataFrame({'d rate1':daily_rate1, 'd rate2':daily_rate2, 'd rate3':daily_rate3})
 df1.to_excel(writer, sheet_name='Daily data')
-###################################################################
 writer.save()
