@@ -10,89 +10,56 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from sklearn.linear_model import LinearRegression
 import pylab
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 max_val_idx = 88
 
 #datetime vector
 start_date = datetime.date(2019, 6, 27)
-start_min = datetime.datetime(2019, 6, 27, 11, 59)
+start_minutes = [datetime.datetime(2019, 6, 28, 5, 20), datetime.datetime(2019, 8, 1, 6, 11), datetime.datetime(2019, 6, 20, 5, 55), datetime.datetime(2019, 8, 15, 6, 10), datetime.datetime(2019, 7, 27, 5, 51), datetime.datetime(2019, 6, 28, 5, 31), datetime.datetime(2019, 8, 14, 6, 14)]
+sheets = ["1001 min", "1002 min", "1003 min", "1006 min", "1007 min", "1008 min", "1009 min"]
 temp_date = start_date
 delta_day = datetime.timedelta(days=1)
 
+for i in range(len(sheets)):
+    # import data from excel
+    data = pd.read_excel("C:\\Users\\joelb\\Downloads\\comparison.xlsx",sheet_name=sheets[i])
+    start_min = start_minutes[i]
+    time_val = data['time_val'].dropna().tolist()
+    cum_val = data['cum_val'].dropna().tolist()
 
-# import data from excel
-data = pd.read_excel("C:\\Users\\joelb\\OneDrive\\Dokumente\\sensitivity_smooth.xlsx",sheet_name='1009_plot')
-time_val = data['time val'].tolist()
-dy_cum_val = data['dy_cum_val'].tolist()
-dy_cum_val = [a/100 for a in dy_cum_val]
-dy_cum = []
-for a in range(11):
-    dy_cum.append(data['dy_cum'+str(a+1)].tolist())
+    time1 = data['time_aaron'].dropna().tolist()
+    cum1 = data['cum_aaron'].dropna().tolist()
 
-for a in range(len(dy_cum)):
-    for b in range(len(dy_cum[a])):
-        dy_cum[a][b] = dy_cum[a][b]/100
+    time2 = data['time_joel'].dropna().tolist()
+    cum2 = data['cum_joel'].dropna().tolist()
 
-dates = []
-dates_min = []
+    dates_val = []
+    dates1 = []
+    dates2 = []
 
-for t in time_val:
-    dates.append(start_min + datetime.timedelta(hours=t))
-
-#plot
-colors = ["#ff0000", "#e50919", "#cc1233", "#b21b4c", "#992466", "#7f2d7f", "#653699", "#4c3fb2", "#3248cc", "#1951e5", "#005bff"]
-
-n_lines = 11
-n_fail = 0
-errors = []
-
-for a in range(11-n_fail):
-    error_thresh = []
-    for i in range(len(dates)-3):
-        daily1 = dy_cum_val[i+3]-dy_cum_val[i+2]
-        daily2 = dy_cum[a][i+3]-dy_cum[a][i+2]
-        error_thresh.append((daily2-daily1)*100)
-    errors.append(error_thresh)
+    for t in time_val:
+        dates_val.append(start_min + datetime.timedelta(hours=t))
+    for t in time1:
+        dates1.append(start_min + datetime.timedelta(hours=t))
+    for t in time2:
+        dates2.append(start_min + datetime.timedelta(hours=t))
 
 
-fig, axs = plt.subplots(2, 1, figsize=(8, 6), gridspec_kw={'height_ratios': [2, 1]})
-labels = [a/100 for a in range(65, 86-2*n_fail, 2)]
-bp_dict = axs[1].boxplot(errors, vert=True, patch_artist=True, showfliers=False,labels=labels,widths=[0.2 for a in range(11-n_fail)])
-axs[1].set_ylabel('Daily errors [cm]',fontsize='medium', fontweight= 'heavy')
-axs[1].set_xlabel('Threshold [-]',fontsize='medium', fontweight= 'heavy')
-med = np.median(errors,axis=1)
-med = [round(i, 2) for i in med]
+    plt.figure(figsize=(8, 4.8))
+    axs = plt.axes()
+    plt.plot(dates2, cum2, "-", color="blue", label="MatchTemplate + Histograms (thresh=0.71)")
+    plt.plot(dates1, cum1, "-", color="red", label="MatchTemplate + MeanShift (mean)")
+    plt.plot(dates_val, cum_val, ".", color="black", label="Validation Data")
+    for label in axs.get_xticklabels():
+        label.set_ha("right")
+        label.set_rotation(18)
+    # Format the date into months & days
+    axs.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
 
-for i, line in enumerate(bp_dict['medians']):
-    # get position data for median line
-    x, y = line.get_xydata()[1] # top of median line
-    # overlay median value
-    plt.text(x, y, med[i], verticalalignment='center') # draw above, centered
+    # Change the tick interval
+    axs.xaxis.set_major_locator(mdates.DayLocator(interval=7))
+    axs.set_ylabel('Displacement [m]',fontsize='medium', fontweight= 'heavy')
+    axs.grid(color='gray', linestyle=':', linewidth=0.5)
+    plt.legend()
 
-
-# fill with colors
-for i, box in enumerate(bp_dict['boxes']):
-    # change outline color
-    box.set(color=colors[i], linewidth=2, alpha=0.9)
-    # change fill color
-    box.set(facecolor = colors[i], alpha=0.3)
-axs[1].grid(axis='y')
-
-
-for a in range(11):
-    axs[0].plot(dates[:len(dy_cum[a])],dy_cum[a], color=colors[a], label='thresh = '+str(round(0.65+0.2/10*a, 2)), linewidth=0.8)
-axs[0].plot(dates, dy_cum_val, '.', color= 'orange', label='Validation data')
-
-for label in axs[0].get_xticklabels():
-    label.set_ha("right")
-    label.set_rotation(18)
-# Format the date into months & days
-axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-
-# Change the tick interval
-axs[0].xaxis.set_major_locator(mdates.DayLocator(interval=7))
-axs[0].set_ylabel('Displacement [m]',fontsize='medium', fontweight= 'heavy')
-axs[0].grid(color='gray', linestyle=':', linewidth=0.5)
-
-plt.show()
+    plt.show()
