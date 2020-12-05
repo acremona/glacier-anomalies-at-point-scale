@@ -47,8 +47,8 @@ for i in range(len(sheets)):
 
     plt.figure(figsize=(8, 4.8))
     axs = plt.axes()
-    plt.plot(dates2, cum2, "-", color="blue", label="MatchTemplate + Histograms (thresh=0.71)")
-    plt.plot(dates1, cum1, "-", color="red", label="MatchTemplate + MeanShift (mean)")
+    plt.plot(dates2, cum2, "-", color="red", label="MatchTemplate + Histograms (thresh=0.71)")
+    plt.plot(dates1, cum1, "-", color="blue", label="MatchTemplate + MeanShift (mean)")
     plt.plot(dates_val, cum_val, ".", color="black", label="Validation Data")
     for label in axs.get_xticklabels():
         label.set_ha("right")
