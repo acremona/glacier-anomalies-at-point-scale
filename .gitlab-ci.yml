@@ -1,6 +1,5 @@
 stages:
     - build
-    - test
     - deploy
 
 build:
@@ -12,13 +11,6 @@ build:
     artifacts:
         paths:
             - build/
-
-test:
-    image: python:3.8
-    stage: test
-    script:
-        - echo "Testing..."
-
 
 pages:
   stage: deploy
