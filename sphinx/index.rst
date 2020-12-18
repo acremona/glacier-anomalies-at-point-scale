@@ -11,8 +11,8 @@ This is the official documentation.
    :maxdepth: 2
    :caption: Contents:
 
-   code
    algorithm1
+   code
 
 
 Indices and tables

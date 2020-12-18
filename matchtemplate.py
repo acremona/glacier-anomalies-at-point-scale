@@ -26,7 +26,7 @@ def load_images_from_folder(folder):
     print("Images loading...")
     images = []
     times = []
-    for filename in os.listdir(folder):
+    for filename in sorted(os.listdir(folder)):
         image = cv2.imread(os.path.join(folder, filename))
         if image is not None:
             images.append(image)
@@ -584,10 +584,10 @@ def matchTemplate_hist(folder_path, template_path, thresh, wait=1, vis=False, pl
     return x, total_displacement, smooth_scales
 
 
-folder_path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001_selection"
+folder_path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001"
 template_path = "C:\\Users\\joelb\\PycharmProjects\\real-time-glacier-mass-changes\\resources\\roi.jpg"
 
-# x, total_displacement, scales = matchTemplate_hist(folder_path, template_path, 0.69, 1, vis=True, plotting=True)
+# x, total_displacement, scales = matchTemplate_hist(folder_path, template_path, 0.69, 0, vis=True, plotting=True)
 # plt.plot(x, scales)
 # plt.xlabel("timestep [h]")
 # plt.ylabel("detected distance between tapes [px]")

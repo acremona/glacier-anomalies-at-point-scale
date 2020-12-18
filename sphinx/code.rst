@@ -1,5 +1,5 @@
-Code documentation
-==================
+Algorithm 2: matchTemplate with meanShift
+==========================================
 
 .. automodule:: main
     :members:
