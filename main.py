@@ -143,121 +143,121 @@ def find_conversion_factor(img):
 
 
 
-# calculating conversion px to m
-#print('[info for the user] You have to select first one point on the top edge of the stripe (leftclick) then one on the bottom (leftclick), then press space botton')
-#p = []
-#cv2.namedWindow('first img')
-#cv2.setMouseCallback('first img',measure)
-#cv2.imshow('first img',img_mes)
-#cv2.waitKey(0)
-#cv2.line(img_mes,p[0],p[1],(0,0,255),2)
-#cv2.imshow('first img',img_mes)
-
-# actual program starts
-a_list = []
-b_list = []
-#matches = match_template(first_img,template)
-#matches2 = match_template(first_img,template2)
-#a, b = find_conversion_factor(img_mes,h,w)
-cal_set, _, _ = load_good_images_from_folder(path_cal)
-templ,_,_ = load_good_images_from_folder(path_template)
-
-#calculation of conversion factor
-for cal in cal_set:
-        a, b = find_conversion_factor(cal)
-        a_list.append(a)
-        b_list.append(b)
-
-plt.scatter(np.arange(len(a_list)),a_list)
-plt.show()
-plt.scatter(np.arange(len(b_list)),b_list)
-plt.show()
-
-a = np.nanmedian(a_list)
-b = np.nanmedian(b_list)
-
-print(a, b)
-#load images
-images, times, time = load_good_images_from_folder(path)
-
-# import validation data
-validation_data = pd.read_excel("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1009.xlsx",sheet_name='Final')
-time_val = validation_data['time val'].tolist()
-rate_val = validation_data['rate val'].tolist()
-dy_cum_val = validation_data['dy cum val'].tolist()
-
-print('images',len(images))
-x_coord = np.arange(len(images))
-
-writer = pd.ExcelWriter('temp.xlsx', engine='xlsxwriter')
-
-for count, tem in enumerate(templ):
-    h, w = tem.shape[0], tem.shape[1]
-    matches = match_template(first_img, tem)
-
-    if not matches:
-        print('No matches found in the first image. Try with another image with at least one match.')
-        cv2.destroyAllWindows()
-
-    elif len(matches) > 1:
-        roi = []
-        track = []
-        for i, m in enumerate(matches):
-            c = int(m[0])
-            r = int(m[1])
-            #cv2.rectangle(first_img, (c, r), (c + w, r + h), 255, 2)
-            roi.append(first_img[r:r + h, c:c + w])
-            track.append((c, r, w, h))
-    else:
-        c = int(matches[0][0])
-        r = int(matches[0][1])
-        #cv2.rectangle(first_img, (c, r), (c + w, r + h), 255, 2)
-        roi = first_img[r:r + h, c:c + w]
-        track = (c, r, w, h)
-
-
-    dy_cal, std_cal, count_lost_cal = mean_shift_same_frame(roi, images, track, time, times, a, b, tem, h, w)
-    dy, std, count_lost = mean_shift_diff_frames(roi, images, track, time, times, a, b, tem, h, w)
-    dy_cal = np.asarray(dy_cal)
-    dy = np.asarray(dy)
-
-    stdcum = []
-    for i, s in enumerate(std):
-        if i == 0:
-            stdcum.append(std[0])
-        else:
-            err = math.pow(stdcum[i-1],2) + math.pow(std[i],2)*10
-            if err != 0:
-                stdcum.append(math.sqrt(err))
-            else:
-                stdcum.append(0)
-
-    dy = dy - dy_cal
-    dycum = np.nancumsum(dy)
-
-    #dy_day = reshape(44,:)? poi sommare o c'è un altro modo?
-    # plt.errorbar(x_coord, dy, yerr=std, linestyle = 'None', ecolor = 'red', marker = '^')
-    # plt.title('1002  27.07.19-27.08.19')
-    # plt.xlabel('Frame Number [-]')
-    # plt.ylabel('Displacement rates in vertical direction [m]')
-    # plt.show()
-
-    # plt.hist(dy,bins='auto')
-    # plt.show()
-
-    #plt.errorbar(times,dycum, yerr=stdcum, linestyle = '-', ecolor = 'red', marker = 'None')
-    #plt.title('1002  27.07.19-27.08.19')
-    #plt.xlabel('Time [-]')
-    #plt.ylabel('Cumulative displacement in vertical direction [m]')
-    #plt.show()
-
-    print('Total displacement :',dycum[-1], ' pm ', stdcum[-1], ' m')
-    print('Object could not be tracked in ',count_lost, ' frames ')
-
-    df = pd.DataFrame({'time': times, 'rate': dy, 'std dev': std, 'dy cum': dycum, ' std dev cum': stdcum, 'count lost': count_lost})
-    df.to_excel(writer, sheet_name = 'sheet ' + str(count))
-
-writer.save()
-cv2.waitKey(1)
-
-cv2.destroyAllWindows()
+# # calculating conversion px to m
+# #print('[info for the user] You have to select first one point on the top edge of the stripe (leftclick) then one on the bottom (leftclick), then press space botton')
+# #p = []
+# #cv2.namedWindow('first img')
+# #cv2.setMouseCallback('first img',measure)
+# #cv2.imshow('first img',img_mes)
+# #cv2.waitKey(0)
+# #cv2.line(img_mes,p[0],p[1],(0,0,255),2)
+# #cv2.imshow('first img',img_mes)
+#
+# # actual program starts
+# a_list = []
+# b_list = []
+# #matches = match_template(first_img,template)
+# #matches2 = match_template(first_img,template2)
+# #a, b = find_conversion_factor(img_mes,h,w)
+# cal_set, _, _ = load_good_images_from_folder(path_cal)
+# templ,_,_ = load_good_images_from_folder(path_template)
+#
+# #calculation of conversion factor
+# for cal in cal_set:
+#         a, b = find_conversion_factor(cal)
+#         a_list.append(a)
+#         b_list.append(b)
+#
+# plt.scatter(np.arange(len(a_list)),a_list)
+# plt.show()
+# plt.scatter(np.arange(len(b_list)),b_list)
+# plt.show()
+#
+# a = np.nanmedian(a_list)
+# b = np.nanmedian(b_list)
+#
+# print(a, b)
+# #load images
+# images, times, time = load_good_images_from_folder(path)
+#
+# # import validation data
+# validation_data = pd.read_excel("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1009.xlsx",sheet_name='Final')
+# time_val = validation_data['time val'].tolist()
+# rate_val = validation_data['rate val'].tolist()
+# dy_cum_val = validation_data['dy cum val'].tolist()
+#
+# print('images',len(images))
+# x_coord = np.arange(len(images))
+#
+# writer = pd.ExcelWriter('temp.xlsx', engine='xlsxwriter')
+#
+# for count, tem in enumerate(templ):
+#     h, w = tem.shape[0], tem.shape[1]
+#     matches = match_template(first_img, tem)
+#
+#     if not matches:
+#         print('No matches found in the first image. Try with another image with at least one match.')
+#         cv2.destroyAllWindows()
+#
+#     elif len(matches) > 1:
+#         roi = []
+#         track = []
+#         for i, m in enumerate(matches):
+#             c = int(m[0])
+#             r = int(m[1])
+#             #cv2.rectangle(first_img, (c, r), (c + w, r + h), 255, 2)
+#             roi.append(first_img[r:r + h, c:c + w])
+#             track.append((c, r, w, h))
+#     else:
+#         c = int(matches[0][0])
+#         r = int(matches[0][1])
+#         #cv2.rectangle(first_img, (c, r), (c + w, r + h), 255, 2)
+#         roi = first_img[r:r + h, c:c + w]
+#         track = (c, r, w, h)
+#
+#
+#     dy_cal, std_cal, count_lost_cal = mean_shift_same_frame(roi, images, track, time, times, a, b, tem, h, w)
+#     dy, std, count_lost = mean_shift_diff_frames(roi, images, track, time, times, a, b, tem, h, w)
+#     dy_cal = np.asarray(dy_cal)
+#     dy = np.asarray(dy)
+#
+#     stdcum = []
+#     for i, s in enumerate(std):
+#         if i == 0:
+#             stdcum.append(std[0])
+#         else:
+#             err = math.pow(stdcum[i-1],2) + math.pow(std[i],2)*10
+#             if err != 0:
+#                 stdcum.append(math.sqrt(err))
+#             else:
+#                 stdcum.append(0)
+#
+#     dy = dy - dy_cal
+#     dycum = np.nancumsum(dy)
+#
+#     #dy_day = reshape(44,:)? poi sommare o c'è un altro modo?
+#     # plt.errorbar(x_coord, dy, yerr=std, linestyle = 'None', ecolor = 'red', marker = '^')
+#     # plt.title('1002  27.07.19-27.08.19')
+#     # plt.xlabel('Frame Number [-]')
+#     # plt.ylabel('Displacement rates in vertical direction [m]')
+#     # plt.show()
+#
+#     # plt.hist(dy,bins='auto')
+#     # plt.show()
+#
+#     #plt.errorbar(times,dycum, yerr=stdcum, linestyle = '-', ecolor = 'red', marker = 'None')
+#     #plt.title('1002  27.07.19-27.08.19')
+#     #plt.xlabel('Time [-]')
+#     #plt.ylabel('Cumulative displacement in vertical direction [m]')
+#     #plt.show()
+#
+#     print('Total displacement :',dycum[-1], ' pm ', stdcum[-1], ' m')
+#     print('Object could not be tracked in ',count_lost, ' frames ')
+#
+#     df = pd.DataFrame({'time': times, 'rate': dy, 'std dev': std, 'dy cum': dycum, ' std dev cum': stdcum, 'count lost': count_lost})
+#     df.to_excel(writer, sheet_name = 'sheet ' + str(count))
+#
+# writer.save()
+# cv2.waitKey(1)
+#
+# cv2.destroyAllWindows()

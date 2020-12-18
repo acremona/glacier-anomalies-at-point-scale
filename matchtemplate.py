@@ -585,7 +585,7 @@ def matchTemplate_hist(folder_path, template_path, thresh, wait=1, vis=False, pl
 
 
 folder_path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001_selection"
-template_path = "resources/roi.jpg"
+template_path = "C:\\Users\\joelb\\PycharmProjects\\real-time-glacier-mass-changes\\resources\\roi.jpg"
 
 x, total_displacement, scales = matchTemplate_hist(folder_path, template_path, 0.69, 1, vis=True, plotting=True)
 plt.plot(x, scales)
