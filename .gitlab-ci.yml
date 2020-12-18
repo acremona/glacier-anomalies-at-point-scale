@@ -1,6 +1,7 @@
 stages:
     - build
     - test
+    - deploy
 
 build:
     image: python:3.8
