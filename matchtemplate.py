@@ -5,7 +5,6 @@ import math
 import pyqtgraph as pg
 import matplotlib.pyplot as plt
 import datetime
-import csv
 
 
 def load_images_from_folder(folder):
@@ -52,12 +51,12 @@ def find_collinear(points):
     Parameters
     ----------
     points : list of tuple of float
-        list of x and y coordinates e.g. [[x1, y1], [x2, y2], ...]
+        list of x and y coordinates e.g. [(x1, y1), (x2, y2), ...]
 
     Returns
     -------
     collinear_points : list of tuple of float
-        list of coordinates of all matches that are collinear
+        list of coordinates of all matches that are collinear (on a straight line)
     angle : float
         the inclination of the pole. returns 0 if no collinear matches.
     """
@@ -128,7 +127,7 @@ def find_collinear(points):
 def get_scale(points, scale_array):
     """
     Gets the most common distance between all matches in 1 frame,
-    Which corresponds to the distance between 2 tape stripes.
+    Which corresponds to the distance between 2 tapes.
 
     Parameters
     ----------
@@ -140,7 +139,7 @@ def get_scale(points, scale_array):
     Returns
     -------
     scale : float
-        the distance between 2 tape stripes in px.
+        the distance between 2 tapes in px.
     """
     scale = rough_scale
 
@@ -149,12 +148,14 @@ def get_scale(points, scale_array):
         current_scale_array = []
         for a in range(len(points)-1):
             for b in range(a+1, len(points), 1):
-                dist = math.sqrt((points[a][0]-points[b][0])**2 + (points[a][1]-points[b][1])**2)
+                dist = math.sqrt((points[a][0]-points[b][0])**2 + (points[a][1]-points[b][1])**2) #pythagoras to get distance
                 current_scale_array.append(dist)
                 scale_array.append(dist)
         if frame_nr > 50:
             for a in current_scale_array:
-                if a > 1.5*rough_scale and (a % rough_scale < 10 or a % rough_scale > rough_scale-10):
+                if a > 1.5*rough_scale and (a % rough_scale < 10 or a % rough_scale > rough_scale-10): #this also adds all distances divided by 2, if the distance is a multiple of the expected scale
+                                                                                                       #a.k.a. the distance between 3 tape stripes divided by 2 is the distance between 2 tapes
+                                                                                                       #increases stability of histogram, especially when threshold is set very high
                     scale_array.append(a/2)
 
         if len(set(scale_array)) > 1 and min(scale_array) < 80:
@@ -162,23 +163,24 @@ def get_scale(points, scale_array):
             try:
                 diff = bin_edges[np.argmax(density)]
             except:
-                diff = rough_scale
+                diff = rough_scale #if no maximum in the histogram can be found, the scale equals the scale from the last image
 
             for d in scale_array:
-                if diff <= d <= diff + 15:
+                if diff <= d <= diff + 15: #if scale is within maximum bin
                     averages.append(d)
             if len(averages) > 0:
-                scale = np.average(averages)
+                scale = np.average(averages) #increases accuracy of scale
                 # print(scale)
-            if len(scale_array) > 200:
-                del scale_array[:-200]
+            if len(scale_array) > 200: # increases stability of scale calculation. Instead of calculating scales from all matches within the current image
+                                       # calculate scales from the last 200 matches (corresponds to 2-4 hours of images) refer to report for more detail.
+                del scale_array[:-200] # if the scale array has more than 200 matches, delete the first values until only 200 values are left
     else:
         print("Cannot calculate scale with less than 2 matches.")
     return scale
 
 
 def get_distance(newmatches, oldmatches, angle):
-    """Detects the most common distance between 2 sets of points. This function is beneficial because all tape stripes
+    """Detects the most common distance between 2 sets of points. This function is beneficial because all tapes
     on the pole are supposed to move the same amount of distance between 2 frames. Therefore, if as input all matches
     in the old frame and all matches in the new frame are chosen, the most common distance between all combination of points
     will be the displacement of the pole.
@@ -357,29 +359,52 @@ def draw_rectangle(image, points, w, h, color, thickness):
 
 
 def clean_scales(daily_disp, conversion_factors, boxlength):
+    """
+    This function makes the calculated conversion factors smoother by applying a convolution function (floating average). This way, outliers (errors)
+    are removed. From the smoothened conversion factors and displacement rates, a new cumulative displacement array is calculated.
+
+    Parameters
+    ----------
+    daily_disp : list of tuple of float
+        list of displacement rates between frames. The first value is the displacement in px, the second value is the relative index to wich image the current one was compared with (this is needed for calculation of cumulative displacements)
+        Example: if the displacements of the current frame was calculated by comparing the current frame with the previous one, the index is 1.
+        If the previous frame did not contain any matches and the displacement was calculated by comparing the current frame with one frame earlier than the previous the index is 2.
+    conversion_factors : list of float
+        list of calculated distances between two tapes from every frame. Same length as daily_disp
+    boxlength
+        amount of values that should influence the floating average. Must be smaller than half of the length of conversion_factors.
+    Returns
+    -------
+    clean_displacements : list of float
+        list of cumulative displacements between frames in cm with smoothened conversion factor
+    scale_smooth : list of float
+        smoothened conversion factors after convolution
+    """
     clean_displacements = []
     for i in range(len(conversion_factors)):
-        if abs(rough_scale-conversion_factors[i])>15:
+        if abs(rough_scale-conversion_factors[i])>15: # fixed hardcoded filter: if scale is 15px bigger or smaller than average of list, it is replaced by average value
             conversion_factors[i] = rough_scale
 
     if len(daily_disp) > 2*boxlength:
         box = np.ones(boxlength) / boxlength
-        edge_correction = [rough_scale for i in range(boxlength)]
+        edge_correction = [rough_scale for i in range(boxlength)] #without edge correction the first and last scales would be 0 after convolution
+                                                                  #thus, a certain amount of values equalling the average of the list are added at the beginning and end of the list
+                                                                  #after convolution, the added values are removed again
         scale_temp = conversion_factors.copy()
-        scale_temp[:0] = edge_correction
-        scale_temp.extend(edge_correction)
-        scale_smooth = np.convolve(scale_temp, box, mode='same')
-        scale_smooth = scale_smooth[boxlength:-boxlength]
+        scale_temp[:0] = edge_correction # add values at beginning
+        scale_temp.extend(edge_correction) # add values at end of list
+        scale_smooth = np.convolve(scale_temp, box, mode='same') # convolution function
+        scale_smooth = scale_smooth[boxlength:-boxlength] # remove values for edge correction again.
     else:
         scale_smooth = conversion_factors
 
 
-    for j in range(len(daily_disp)):
-        if j == 0:
-            clean_displacements.append(px_to_cm(daily_disp[j][0], 4, scale_smooth[j]))
+    for j in range(len(daily_disp)): # this loop calculates cumulative displacements in cm.
+        if j == 0: # case for the very first displacement
+            clean_displacements.append(px_to_cm(daily_disp[j][0], tape_spacing, scale_smooth[j]))
         else:
             prev_total = clean_displacements[daily_disp[j][1]]
-            clean_displacements.append(prev_total+px_to_cm(daily_disp[j][0], 4, scale_smooth[j]))
+            clean_displacements.append(prev_total+px_to_cm(daily_disp[j][0], tape_spacing, scale_smooth[j]))
     return clean_displacements, scale_smooth
 
 
@@ -403,20 +428,53 @@ def px_to_cm(px, ref_cm, ref_px):
     """
     return px/ref_px*ref_cm
 
-def matchTemplate_hist(original_images, times, template_path, thresh, wait, vis=False, plotting=False):
+def matchTemplate_hist(folder_path, template_path, thresh, wait=1, vis=False, plotting=False, csv=True):
+    """
+    Main function for Algorithm 1 (MatchTemplate with Histograms).
 
-    global h, w, rough_scale, threshTracking, threshDuplicate, threshAngle, frame_nr, h_tot, w_tot, x, res_img, visualize
+    Parameters
+    ----------
+    folder_path : str
+        String with path to folder where the image series is located. can be an absolute or relative path
+    template_path : str
+        String with path to the image that should be used as template (image of one single tape)
+    thresh : float
+        Threshold for filtering matchTemplate. Recommended value is 0.7 - 0.75. See technical report for further info.
+    wait : int, optional
+        waiting time between 2 consecutive images if the calculation is visualized in [ms]. default is 1 ms.
+    vis : bool, optional
+        visualizes calculation (time-lapse with indicators). default is False
+    plotting : bool, optional
+        plots the calculation in real-time (parallel to vis). default is False. Note that real-time displacements are before post-processing, so smoothing of conversion factors with convolution is not applied yet!
+        Requires PyQt5 library
+    csv : bool, optional
+        saves all output data into a csv file. default is True
+    Returns
+    -------
+    x-axis : list of float
+        time values in hours for every image
+    total_displacement : list of float
+        total cumulative displacements for every image in cm. same length as x-axis
+    smooth_scales : list of float
+        distances between two tapes in px for every image. same length as x-axis
+    """
+
+    global h, w, rough_scale, tape_height, tape_spacing, threshTracking, threshDuplicate, threshAngle, frame_nr, h_tot, w_tot, x, res_img, visualize, times
+    ########################################################################################################
+    # Warning: These thresholds are used for various filtering/calculation operations. They could be     ###
+    #          changed in theory, but the algorithm is only tested for those default values listed below ###
     ########################################################################################################
     template = cv2.imread(template_path)  # change to path of RoI
-    threshGray = thresh                           # threshold to match template in grayscale, 1 for perfect match, 0 for no match
-    threshSat = thresh                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
+    threshGray = thresh                         # threshold to match template in grayscale, 1 for perfect match, 0 for no match
+    threshSat = thresh                          # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
     threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
     threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
     threshTracking = 3                          # threshold to catch match from last frame (in pixel)
+    tape_height = 1.9                           # height of tape in cm
+    tape_spacing = 4.0                          # distance between two tapes in cm (center to center)
     ########################################################################################################
-
+    images, times = load_images_from_folder(folder_path)
     visualize = vis
-    images = original_images
     template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
     template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
     template_sat = template_hsv[:, :, 1]                        # extracting only the saturation channel of the HSV template
@@ -428,9 +486,9 @@ def matchTemplate_hist(original_images, times, template_path, thresh, wait, vis=
         contour = max(contours, key=cv2.contourArea)
         _, _, _, rough_scale = cv2.boundingRect(contour)
     if h*2/3 < rough_scale < h:
-        rough_scale = rough_scale/1.9*4
+        rough_scale = rough_scale/tape_height*tape_spacing
     else:
-        rough_scale = h/1.9*3
+        rough_scale = h/tape_height*(tape_spacing-1)
 
     all_matches = []                                            # list where all matches of all frames will be safed
     total_displacement = []                                     # list for plotting where all cumulative displacements will be stored
@@ -441,11 +499,11 @@ def matchTemplate_hist(original_images, times, template_path, thresh, wait, vis=
     if plotting:
         win = pg.GraphicsWindow()                                   # initialize plotting
         pw = win.addPlot()
-        pc = win.addPlot()
+        # pc = win.addPlot()
         disp = pw.plot()
-        sc = pc.plot()
-        st_n = pc.plot()
-        st_p = pc.plot()
+        # sc = pc.plot()
+        # st_n = pc.plot()
+        # st_p = pc.plot()
     for frame_nr, img in enumerate(images):
         # print("========== Frame "+str(frame_nr)+" ==========")
         matches = []
@@ -489,19 +547,19 @@ def matchTemplate_hist(original_images, times, template_path, thresh, wait, vis=
                     rough_scale = np.median(all_scales)
                     if frame_nr > 1:
                         prev_total = total_displacement[x.index(times[frame_nr-delta])]
-                        total_displacement.append(prev_total + px_to_cm(frame_disp, 4, scale))
+                        total_displacement.append(prev_total + px_to_cm(frame_disp, tape_spacing, scale))
                         daily_displacements.append((frame_disp, x.index(times[frame_nr-delta])))
                     else:
-                        total_displacement.append(px_to_cm(frame_disp, 4, scale))
+                        total_displacement.append(px_to_cm(frame_disp, tape_spacing, scale))
                         daily_displacements.append((frame_disp, 0))
-                    # print("Displacement: " + str(px_to_cm(frame_disp, 4, scale)) + " cm. Total: " + str(total_displacement[-1]) + " cm.")
+                    # print("Displacement: " + str(px_to_cm(frame_disp, tape_spacing, scale)) + " cm. Total: " + str(total_displacement[-1]) + " cm.")
                     if plotting:
                         disp.setData(x, total_displacement, symbolBrush=('b'))
-                        sc.setData(x, all_scales, symbolBrush=('g'))
-                        std = np.std(all_scales)
-                        avg = np.average(all_scales)
-                        st_n.setData([0, x[-1]], [avg - std, avg - std])
-                        st_p.setData([0, x[-1]], [avg + std, avg + std])
+                        # sc.setData(x, all_scales, symbolBrush=('g'))
+                        # std = np.std(all_scales)
+                        # avg = np.average(all_scales)
+                        # st_n.setData([0, x[-1]], [avg - std, avg - std])
+                        # st_p.setData([0, x[-1]], [avg + std, avg + std])
 
                 else:
                     print("No displacements found!")
@@ -515,14 +573,21 @@ def matchTemplate_hist(original_images, times, template_path, thresh, wait, vis=
     # cv2.destroyAllWindows()
 
     total_displacement, smooth_scales = clean_scales(daily_displacements, all_scales, 100)
+
+    if csv:
+        conversion_factors = [tape_spacing / val for val in smooth_scales]
+        displacement_rate = [total_displacement[i + 1] - total_displacement[i] for i in range(len(total_displacement) - 1)]
+        displacement_rate[:0] = [total_displacement[0]]
+        out = np.vstack((np.array(x), np.array(total_displacement), np.array(displacement_rate), np.array(smooth_scales), np.array(conversion_factors)))
+        out_transposed = np.transpose(out)
+        np.savetxt("output.csv", out_transposed, comments='', header="time[h],cumulative displacements [cm],displacement rate [cm],distance between two tapes [px], conversion factor [cm/px]", delimiter=",", fmt='%f')
     return x, total_displacement, smooth_scales
 
 
 folder_path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1001_selection"
 template_path = "resources/roi.jpg"
 
-image_array, times = load_images_from_folder(folder_path)
-x, total_displacement, scales = matchTemplate_hist(image_array, times, template_path, 0.69, 1)
+x, total_displacement, scales = matchTemplate_hist(folder_path, template_path, 0.69, 1, vis=True, plotting=True)
 plt.plot(x, scales)
 plt.xlabel("timestep [h]")
 plt.ylabel("detected distance between tapes [px]")
@@ -533,8 +598,7 @@ plt.ylabel("cumulative melt [cm]")
 plt.show()
 
 
-out = np.vstack((np.array(x), np.array(total_displacement), np.array(scales)))
-np.savetxt("output.csv", out, delimiter=",", fmt='%f')
+
 
 
 
