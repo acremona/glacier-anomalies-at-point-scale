@@ -23,9 +23,7 @@ test:
 pages:
   stage: deploy
   script:
-    - mkdir .public
-    - cp -r * .public
-    - mv .public public
+    - mv docs public
   artifacts:
     paths:
       - public
