@@ -1,43 +1,168 @@
 
-<!DOCTYPE html>
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Algorithm 1 MatchTemplate with Histograms &#8212; Determine real-time glacier mass changes from camera images 0.0.1 documentation</title>
-    <link rel="stylesheet" href="_static/groundwork.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Algorithm 1 MatchTemplate with Histograms &mdash; Determine real-time glacier mass changes from camera images 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Code documentation" href="code.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="code.html" title="Code documentation"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Determine real-time glacier mass changes from camera images 0.0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Algorithm 1 MatchTemplate with Histograms</a></li> 
-      </ul>
-    </div>  
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Determine real-time glacier mass changes from camera images
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Algorithm 1 MatchTemplate with Histograms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#main-function">Main Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#choosing-the-right-template-image">Choosing the right template image</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#subfunctions-used-by-matchtemplate-hist">Subfunctions used by matchTemplate_hist</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-0">Removing Duplicates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-1">Finding Collinear Matches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-2">Calculating Displacements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-3">Calculating Conversion Factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-4">Other functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Determine real-time glacier mass changes from camera images</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Algorithm 1 MatchTemplate with Histograms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/algorithm1.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="algorithm-1-matchtemplate-with-histograms">
 <h1>Algorithm 1 MatchTemplate with Histograms<a class="headerlink" href="#algorithm-1-matchtemplate-with-histograms" title="Permalink to this headline">¶</a></h1>
@@ -80,6 +205,9 @@ Requires PyQt5 library</p></li>
 </dl>
 </dd></dl>
 
+<div class="section" id="choosing-the-right-template-image">
+<h3>Choosing the right template image<a class="headerlink" href="#choosing-the-right-template-image" title="Permalink to this headline">¶</a></h3>
+</div>
 </div>
 <div class="section" id="subfunctions-used-by-matchtemplate-hist">
 <h2>Subfunctions used by matchTemplate_hist<a class="headerlink" href="#subfunctions-used-by-matchtemplate-hist" title="Permalink to this headline">¶</a></h2>
@@ -251,78 +379,100 @@ If the previous frame did not contain any matches and the displacement was calcu
 </dd></dl>
 
 </div>
-<div class="section" id="other-functions">
-<h3>Other functions<a class="headerlink" href="#other-functions" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="module-4">
+<span id="other-functions"></span><h3>Other functions<a class="headerlink" href="#module-4" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="matchtemplate.load_images_from_folder">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">load_images_from_folder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">folder</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.load_images_from_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>function loading all image files inside a specified folder. File names must contain date and time with delimiters - or _</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>folder</strong> (<em>string</em>) – path of the folder (string). can be a relative or absolute path.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>images</strong> (<em>list</em>) – list of opencv images</p></li>
+<li><p><strong>times</strong> (<em>list of float</em>) – list of time differences to the first image in hours. e.g. [0, 0.5, 1.0, …]</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="matchtemplate.draw_rectangle">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">draw_rectangle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">points</span></em>, <em class="sig-param"><span class="n">w</span></em>, <em class="sig-param"><span class="n">h</span></em>, <em class="sig-param"><span class="n">color</span></em>, <em class="sig-param"><span class="n">thickness</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.draw_rectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draws a rectangles for a set of points. This function is mainly for visualizing and debugging purposes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>opencv_image</em>) – The image where the recangles should be drawn</p></li>
+<li><p><strong>points</strong> (<em>list of tuple of float</em>) – set of x and y coordinates. e.g. [(200, 100), (120, 150), …]</p></li>
+<li><p><strong>w</strong> (<em>int</em>) – width of the rectangles</p></li>
+<li><p><strong>h</strong> (<em>int</em>) – height of the rectangles</p></li>
+<li><p><strong>color</strong> (<em>tuple of int</em>) – color tuple in BGR</p></li>
+<li><p><strong>thickness</strong> (<em>int</em>) – thickness of the drawn rectangle borders</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 </div>
 </div>
 
 
-            <div class="clearer"></div>
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Algorithm 1 MatchTemplate with Histograms</a><ul>
-<li><a class="reference internal" href="#main-function">Main Function</a></li>
-<li><a class="reference internal" href="#subfunctions-used-by-matchtemplate-hist">Subfunctions used by matchTemplate_hist</a><ul>
-<li><a class="reference internal" href="#module-0">Removing Duplicates</a></li>
-<li><a class="reference internal" href="#module-1">Finding Collinear Matches</a></li>
-<li><a class="reference internal" href="#module-2">Calculating Displacements</a></li>
-<li><a class="reference internal" href="#module-3">Calculating Conversion Factor</a></li>
-<li><a class="reference internal" href="#other-functions">Other functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="code.html" class="btn btn-neutral float-left" title="Code documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="code.html"
-                        title="previous chapter">Code documentation</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/algorithm1.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Joël Borner, Aaron Cremona
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="code.html" title="Code documentation"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Determine real-time glacier mass changes from camera images 0.0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Algorithm 1 MatchTemplate with Histograms</a></li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, Joël Borner, Aaron Cremona.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
 </html>

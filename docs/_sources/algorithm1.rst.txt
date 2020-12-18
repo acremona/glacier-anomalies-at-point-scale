@@ -15,6 +15,10 @@ The workflow of the main function is as follows:
 .. automodule:: matchtemplate
     :members: matchTemplate_hist
 
+Choosing the right template image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 Subfunctions used by matchTemplate_hist
 ---------------------------------------
 The following functions are called by the main function. Those functions are not intended to use individually. The documentation is therefore purely for a better understanding of the main function.
@@ -41,3 +45,5 @@ Calculating Conversion Factor
 
 Other functions
 ~~~~~~~~~~~~~~~~
+.. automodule:: matchtemplate
+    :members: load_images_from_folder, draw_rectangle
