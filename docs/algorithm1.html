@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Algorithm 1 MatchTemplate with Histograms &#8212; Determine real-time glacier mass changes from camera images 0.0.1 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/groundwork.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -15,70 +15,281 @@
     <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Code documentation" href="code.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="prev" title="Code documentation" href="code.html" /> 
   </head><body>
-  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="code.html" title="Code documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Determine real-time glacier mass changes from camera images 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Algorithm 1 MatchTemplate with Histograms</a></li> 
+      </ul>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="algorithm-1-matchtemplate-with-histograms">
 <h1>Algorithm 1 MatchTemplate with Histograms<a class="headerlink" href="#algorithm-1-matchtemplate-with-histograms" title="Permalink to this headline">¶</a></h1>
 <p>Insert text here</p>
-<div class="section" id="section-1">
-<h2>Section 1<a class="headerlink" href="#section-1" title="Permalink to this headline">¶</a></h2>
-<p>Insert some stuff here</p>
-<div class="section" id="subsection-1-1">
-<h3>Subsection 1.1<a class="headerlink" href="#subsection-1-1" title="Permalink to this headline">¶</a></h3>
-<p>Insert some stuff ehre.</p>
+<div class="section" id="main-function">
+<h2>Main Function<a class="headerlink" href="#main-function" title="Permalink to this headline">¶</a></h2>
+<p>The workflow of the main function is as follows:</p>
+<ul class="simple">
+<li><p>Use the <a class="reference external" href="https://docs.opencv.org/master/d4/dc6/tutorial_py_template_matching.html">matchTemplate</a> function.</p></li>
+<li><p>Remove duplicated matches</p></li>
+<li><p>Finding collinear matches</p></li>
+<li><p>Calculating displacements in pixel with the help of histograms</p></li>
+<li><p>Calculating a conversion factor from px to metric units with the help of histograms</p></li>
+</ul>
+<span class="target" id="module-matchtemplate"></span><dl class="py function">
+<dt id="matchtemplate.matchTemplate_hist">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">matchTemplate_hist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">folder_path</span></em>, <em class="sig-param"><span class="n">template_path</span></em>, <em class="sig-param"><span class="n">thresh</span></em>, <em class="sig-param"><span class="n">wait</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">vis</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">plotting</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">csv</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.matchTemplate_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function for Algorithm 1 (MatchTemplate with Histograms).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder_path</strong> (<em>str</em>) – String with path to folder where the image series is located. can be an absolute or relative path</p></li>
+<li><p><strong>template_path</strong> (<em>str</em>) – String with path to the image that should be used as template (image of one single tape)</p></li>
+<li><p><strong>thresh</strong> (<em>float</em>) – Threshold for filtering matchTemplate. Recommended value is 0.7 - 0.75. See technical report for further info.</p></li>
+<li><p><strong>wait</strong> (<em>int</em><em>, </em><em>optional</em>) – waiting time between 2 consecutive images if the calculation is visualized in [ms]. default is 1 ms.</p></li>
+<li><p><strong>vis</strong> (<em>bool</em><em>, </em><em>optional</em>) – visualizes calculation (time-lapse with indicators). default is False</p></li>
+<li><p><strong>plotting</strong> (<em>bool</em><em>, </em><em>optional</em>) – plots the calculation in real-time (parallel to vis). default is False. Note that real-time displacements are before post-processing, so smoothing of conversion factors with convolution is not applied yet!
+Requires PyQt5 library</p></li>
+<li><p><strong>csv</strong> (<em>bool</em><em>, </em><em>optional</em>) – saves all output data into a csv file. default is True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>x-axis</strong> (<em>list of float</em>) – time values in hours for every image</p></li>
+<li><p><strong>total_displacement</strong> (<em>list of float</em>) – total cumulative displacements for every image in cm. same length as x-axis</p></li>
+<li><p><strong>smooth_scales</strong> (<em>list of float</em>) – distances between two tapes in px for every image. same length as x-axis</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="subfunctions-used-by-matchtemplate-hist">
+<h2>Subfunctions used by matchTemplate_hist<a class="headerlink" href="#subfunctions-used-by-matchtemplate-hist" title="Permalink to this headline">¶</a></h2>
+<p>The following functions are called by the main function. Those functions are not intended to use individually. The documentation is therefore purely for a better understanding of the main function.</p>
+<div class="section" id="module-0">
+<span id="removing-duplicates"></span><h3>Removing Duplicates<a class="headerlink" href="#module-0" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="matchtemplate.remove_duplicates">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">remove_duplicates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.remove_duplicates" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is approximating points that are very close together into 1 single point.
+If 2 or more points are close together (defined by a threshhold in px), the average x and y coordinates of all those points determine the result point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>points</strong> (<em>list of tuple of float</em>) – list of x and y coordinates e.g. [[x1, y1], [x2, y2], …]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>points</strong> – list of x and y coordinates of fewer points.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of tuple of float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-1">
+<span id="finding-collinear-matches"></span><h3>Finding Collinear Matches<a class="headerlink" href="#module-1" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="matchtemplate.find_collinear">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">find_collinear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.find_collinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function searches for points that are collinear (on 1 straight line). If there are several lines, the one with
+the most points on it is chosen.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>points</strong> (<em>list of tuple of float</em>) – list of x and y coordinates e.g. [(x1, y1), (x2, y2), …]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>collinear_points</strong> (<em>list of tuple of float</em>) – list of coordinates of all matches that are collinear (on a straight line)</p></li>
+<li><p><strong>angle</strong> (<em>float</em>) – the inclination of the pole. returns 0 if no collinear matches.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-2">
+<span id="calculating-displacements"></span><h3>Calculating Displacements<a class="headerlink" href="#module-2" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="matchtemplate.get_distance">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">get_distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">newmatches</span></em>, <em class="sig-param"><span class="n">oldmatches</span></em>, <em class="sig-param"><span class="n">angle</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.get_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detects the most common distance between 2 sets of points. This function is beneficial because all tapes
+on the pole are supposed to move the same amount of distance between 2 frames. Therefore, if as input all matches
+in the old frame and all matches in the new frame are chosen, the most common distance between all combination of points
+will be the displacement of the pole.
+To be more precise, the distance projected to the pole is calculated (hence the pole inclination as input).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newmatches</strong> (<em>list of tuple of float</em>) – List of point coordinates (x, y)</p></li>
+<li><p><strong>oldmatches</strong> (<em>list of tuple of float</em>) – List of point coordinates (x, y)</p></li>
+<li><p><strong>angle</strong> (<em>float</em>) – The inclination of the pole (retrieved with the find_collinear function)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>bin_lower</strong> (<em>float</em>) – lower limit of where the most common displacements were found.</p></li>
+<li><p><strong>bin_upper</strong> (<em>float</em>) – upper limit of where the most common displacements were found.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="matchtemplate.compare_matches">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">compare_matches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">matches</span></em>, <em class="sig-param"><span class="n">inclination</span></em>, <em class="sig-param"><span class="n">delta</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.compare_matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function compares the last two sets of points in a whole time series of points and calculates the displacement between those.
+If no displacement can be calculated, it recursively tries to compare earlier points with the current one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matches</strong> (<em>list of tuple of float</em>) – A 2d list containing several points for each time step. e.g. [[[x11, y11], [x12, y12]], [[x21, y21], [x22, y22]]]</p></li>
+<li><p><strong>inclination</strong> (<em>float</em>) – Inclination angle of the pole in rad</p></li>
+<li><p><strong>delta</strong> (<em>int</em>) – difference between the positions of the images that are compared. default is 1 (last image compared to second last).
+delta is used to recursively iterate through past images to find good matches.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>displacement</strong> (<em>float</em>) – displacement between the frames in px.</p></li>
+<li><p><strong>delta</strong> (<em>int</em>) – end point of the recursive iteration. shows to which frame the last frame was compared to. Example: If the last frame is compared to the second last delta = 1.
+delta is used to calculate the total displacement in a later step of the algorithm. The information is needed, so that the found displacement of the current time step can be added to the correct value of the cumulative displacement.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-3">
+<span id="calculating-conversion-factor"></span><h3>Calculating Conversion Factor<a class="headerlink" href="#module-3" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="matchtemplate.get_scale">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">get_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span></em>, <em class="sig-param"><span class="n">scale_array</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.get_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the most common distance between all matches in 1 frame,
+Which corresponds to the distance between 2 tapes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>list of tuple of float</em>) – list of all matches in a frame</p></li>
+<li><p><strong>scale_array</strong> (<em>list of float</em>) – list of float numbers of scales from previous frames, so an average can be calculated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>scale</strong> – the distance between 2 tapes in px.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="matchtemplate.clean_scales">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">clean_scales</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">daily_disp</span></em>, <em class="sig-param"><span class="n">conversion_factors</span></em>, <em class="sig-param"><span class="n">boxlength</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.clean_scales" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function makes the calculated conversion factors smoother by applying a convolution function (floating average). This way, outliers (errors)
+are removed. From the smoothened conversion factors and displacement rates, a new cumulative displacement array is calculated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>daily_disp</strong> (<em>list of tuple of float</em>) – list of displacement rates between frames. The first value is the displacement in px, the second value is the relative index to wich image the current one was compared with (this is needed for calculation of cumulative displacements)
+Example: if the displacements of the current frame was calculated by comparing the current frame with the previous one, the index is 1.
+If the previous frame did not contain any matches and the displacement was calculated by comparing the current frame with one frame earlier than the previous the index is 2.</p></li>
+<li><p><strong>conversion_factors</strong> (<em>list of float</em>) – list of calculated distances between two tapes from every frame. Same length as daily_disp</p></li>
+<li><p><strong>boxlength</strong> – amount of values that should influence the floating average. Must be smaller than half of the length of conversion_factors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>clean_displacements</strong> (<em>list of float</em>) – list of cumulative displacements between frames in cm with smoothened conversion factor</p></li>
+<li><p><strong>scale_smooth</strong> (<em>list of float</em>) – smoothened conversion factors after convolution</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="matchtemplate.px_to_cm">
+<code class="sig-prename descclassname">matchtemplate.</code><code class="sig-name descname">px_to_cm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">px</span></em>, <em class="sig-param"><span class="n">ref_cm</span></em>, <em class="sig-param"><span class="n">ref_px</span></em><span class="sig-paren">)</span><a class="headerlink" href="#matchtemplate.px_to_cm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a number from px to cm according to a defined scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>px</strong> (<em>float</em>) – distance in px that is to be converted.</p></li>
+<li><p><strong>ref_cm</strong> (<em>float</em>) – reference distance in cm (e.g. distance between 2 tape stripes).</p></li>
+<li><p><strong>ref_px</strong> (<em>float</em>) – reference distance in px (same reference as ref_cm)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>distance</strong> – converted distance in cm.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="other-functions">
+<h3>Other functions<a class="headerlink" href="#other-functions" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Determine real-time glacier mass changes from camera images</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="code.html">Code documentation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Algorithm 1 MatchTemplate with Histograms</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#section-1">Section 1</a></li>
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Algorithm 1 MatchTemplate with Histograms</a><ul>
+<li><a class="reference internal" href="#main-function">Main Function</a></li>
+<li><a class="reference internal" href="#subfunctions-used-by-matchtemplate-hist">Subfunctions used by matchTemplate_hist</a><ul>
+<li><a class="reference internal" href="#module-0">Removing Duplicates</a></li>
+<li><a class="reference internal" href="#module-1">Finding Collinear Matches</a></li>
+<li><a class="reference internal" href="#module-2">Calculating Displacements</a></li>
+<li><a class="reference internal" href="#module-3">Calculating Conversion Factor</a></li>
+<li><a class="reference internal" href="#other-functions">Other functions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="code.html" title="previous chapter">Code documentation</a></li>
-  </ul></li>
-</ul>
-</div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="code.html"
+                        title="previous chapter">Code documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/algorithm1.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -89,32 +300,29 @@
     </div>
 </div>
 <script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2020, Joël Borner, Aaron Cremona.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/algorithm1.rst.txt"
-          rel="nofollow">Page source</a>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="code.html" title="Code documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Determine real-time glacier mass changes from camera images 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Algorithm 1 MatchTemplate with Histograms</a></li> 
+      </ul>
     </div>
-
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Joël Borner, Aaron Cremona.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
   </body>
 </html>

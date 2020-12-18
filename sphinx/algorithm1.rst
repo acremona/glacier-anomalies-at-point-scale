@@ -2,10 +2,48 @@ Algorithm 1 MatchTemplate with Histograms
 ============================================
 Insert text here
 
-Section 1
-----------
-Insert some stuff here
+Main Function
+---------------
+The workflow of the main function is as follows:
 
-Subsection 1.1
-~~~~~~~~~~~~~~
-Insert some stuff ehre.
+* Use the `matchTemplate <https://docs.opencv.org/master/d4/dc6/tutorial_py_template_matching.html>`_ function.
+* Remove duplicated matches
+* Finding collinear matches
+* Calculating displacements in pixel with the help of histograms
+* Calculating a conversion factor from px to metric units with the help of histograms
+
+.. automodule:: matchtemplate
+    :members: matchTemplate_hist
+
+Choosing the right template image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Subfunctions used by matchTemplate_hist
+---------------------------------------
+The following functions are called by the main function. Those functions are not intended to use individually. The documentation is therefore purely for a better understanding of the main function.
+
+Removing Duplicates
+~~~~~~~~~~~~~~~~~~~~
+.. automodule:: matchtemplate
+    :members: remove_duplicates
+
+Finding Collinear Matches
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automodule:: matchtemplate
+    :members: find_collinear
+
+Calculating Displacements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automodule:: matchtemplate
+    :members: get_distance, compare_matches
+
+Calculating Conversion Factor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automodule:: matchtemplate
+    :members: get_scale, clean_scales, px_to_cm
+
+Other functions
+~~~~~~~~~~~~~~~~
+.. automodule:: matchtemplate
+    :members: load_images_from_folder, draw_rectangle

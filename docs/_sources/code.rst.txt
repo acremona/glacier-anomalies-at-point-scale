@@ -1,9 +1,6 @@
 Code documentation
 ==================
 
-.. automodule:: matchtemplate
-    :members:
-
 .. automodule:: main
     :members:
 
