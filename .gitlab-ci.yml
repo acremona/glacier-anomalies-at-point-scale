@@ -1,26 +1,10 @@
-stages:
-    - build
-    - deploy
-
-build:
-    image: python:3.8
-    stage: build
-    script:
-    - echo "Building..."
-    - pip install -r requirements.txt
-    artifacts:
-        paths:
-            - build/
-
 pages:
   stage: deploy
   script:
-    - mkdir public/
-    - cp -r * public/
     - mv docs/ public/
   artifacts:
     paths:
-      - public/
+    - public
   only:
-    - master
+  - master
 
