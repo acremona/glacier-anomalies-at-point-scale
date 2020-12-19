@@ -1,11 +1,14 @@
 Algorithm 2: matchTemplate with meanShift
 ==========================================
 
-.. automodule:: main
+.. automodule:: mT_mS
     :members:
 
-.. automodule:: Meanshift_funct
+.. automodule:: mT
     :members:
 
-.. automodule:: matchtemplate_funct
+.. automodule:: mS
+    :members:
+
+.. automodule:: mask
     :members:

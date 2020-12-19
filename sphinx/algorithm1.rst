@@ -1,6 +1,16 @@
 Algorithm 1: MatchTemplate with Histograms
 ============================================
-Insert text here
+
+How to run:
+
+1. Install dependencies and requirements
+2. Import the script and run the main function
+::
+
+    import mT_Hist
+    x, displacements, conversion factors = mT_Hist.matchTemplate_hist("myfolder", "template.jpg", 0.70, wait=1, vis=False, plotting=False, csv=True)
+
+3. Analyze csv or plot the return values with pyplot.
 
 Main Function
 ---------------
@@ -12,7 +22,7 @@ The workflow of the main function is as follows:
 * Calculating displacements in pixel with the help of histograms
 * Calculating a conversion factor from px to metric units with the help of histograms
 
-.. automodule:: matchtemplate
+.. automodule:: mT_Hist
     :members: matchTemplate_hist
 
 Important instructions for the template image
@@ -47,7 +57,7 @@ Important instructions for the image series
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The whole time series is a set of images in a folder. This folder is given the function as an input. The following criteria should be met:
 
-* The import order is alphabetical.
+* The import order is alphabetical. This is unproblematic if the filename convention is followed.
 * The filenames must be timestamps in the following format: yyyy-mm-dd_hh-mm (e.g. 2019-06-27_11-59.jpg) other image file types are also allowed
 * The algorithm is tested and optimized for time intervals of 20 minutes between images. Different intervals are generally possible (yet untested), but the displacements between two images must not exceed 4 cm.
 * Footage from installation work at the beginning of the time series must be removed. The first image should only contain the installed pole.
@@ -65,31 +75,32 @@ Some remarks:
 * Higher thresholds may lead to a loss of correlation and termination of the program if there is a longer period of bad quality images (e.g. snowfall)
 * Lower thresholds may lead to higher instability of the algorithm (wrong displacement calculations)
 
-Subfunctions
+Sub-functions
 ---------------------------------------
 The following functions are called by the main function. Those functions are not intended to use individually. The documentation is therefore purely for a better understanding of the main function.
 
 Removing Duplicates
 ~~~~~~~~~~~~~~~~~~~~
-.. automodule:: matchtemplate
+.. automodule:: mT_Hist
     :members: remove_duplicates
 
 Finding Collinear Matches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: matchtemplate
+.. automodule:: mT_Hist
     :members: find_collinear
 
 Calculating Displacements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: matchtemplate
+.. automodule:: mT_Hist
     :members: get_distance, compare_matches
 
 Calculating Conversion Factor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: matchtemplate
+.. automodule:: mT_Hist
     :members: get_scale, clean_scales, px_to_cm
 
 Other functions
 ~~~~~~~~~~~~~~~~
-.. automodule:: matchtemplate
+.. automodule:: mT_Hist
     :members: load_images_from_folder, draw_rectangle
+
