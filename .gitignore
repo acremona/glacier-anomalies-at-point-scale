@@ -3,3 +3,5 @@
 /resources
 /venv
 /sphinx/_build
+output.csv
+output.png
