@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-def create_yellow_mask(image):
+def yellow(image):
     """Creates a mask for yellow color.
 
     Parameters
@@ -18,7 +18,7 @@ def create_yellow_mask(image):
     mask = cv2.inRange(image, low_yellow, upper_yellow)
     return mask
 
-def create_red_mask(image):
+def red(image):
     """Creates a mask for red color.
 
     Parameters
@@ -39,7 +39,7 @@ def create_red_mask(image):
     mask = cv2.inRange(image, low_red, upper_red) + cv2.inRange(image, low2, up2)
     return mask
 
-def create_green_mask(image):
+def green(image):
     """Creates a mask for green color.
 
     Parameters
@@ -58,7 +58,7 @@ def create_green_mask(image):
     mask = cv2.inRange(image, low_green, upper_green)
     return mask
 
-def create_blue_mask(image):
+def blue(image):
     """Creates a mask for blue color.
 
     Parameters
@@ -78,7 +78,7 @@ def create_blue_mask(image):
     return mask
 
 
-def create_black_mask(image):
+def black(image):
     """Creates a mask for black color.
 
     Parameters
