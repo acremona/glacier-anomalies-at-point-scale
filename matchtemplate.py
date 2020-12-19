@@ -7,14 +7,14 @@ import matplotlib.pyplot as plt
 import datetime
 
 ########################################################################################################
-path = "C:\\Users\\joelb\\Downloads\\holfuy_images_2019\\1009"           # change path to folder with images
-template = cv2.imread("C:\\Users\joelb\\PycharmProjects\\real-time-glacier-mass-changes\\resources\\roi6.jpg")  # change to path of RoI
+path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\images_test"           # change path to folder with images
+template = cv2.imread("C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\template_blue.jpg")  # change to path of RoI
 threshGray = 0.6                            # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8                             # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
 threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
 threshTracking = 3                          # threshold to catch match from last frame (in pixel)
-wait = 1                                  # time between every frame in ms, 0 for manual scrolling
+wait = 0                                  # time between every frame in ms, 0 for manual scrolling
 ########################################################################################################
 
 

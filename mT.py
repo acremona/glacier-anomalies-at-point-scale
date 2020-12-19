@@ -2,19 +2,11 @@ import cv2
 import numpy as np
 import math
 
-#from find_collinear import find_collinear
-#from remove_duplicates import remove_duplicates
-
 threshGray = 0.7  # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8  # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 wait = 2  # time between every frame in ms, 0 for manual scrolling
 threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
 threshDuplicate = 25                      # threshold to find duplicates within matches (in pixel)
-
-
-def draw_rectangle(img, points, w, h, color, thickness):
-    for count, point in enumerate(points):
-        cv2.rectangle(img, (int(round(point[0])), int(round(point[1]))), (int(round(point[0]))+w, int(round(point[1]))+h), color, thickness)
 
 
 def find_collinear(points):
@@ -158,30 +150,24 @@ def match_template(im,temp):
     template_sat = template_hsv[:, :, 1]                    # extracting only the saturation channel of the HSV template
 
     matches = []
-    gray_img = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)  # turn image into grayscale
-    hsv_img = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)  # turn image into HSV
-    sat_img = hsv_img[:, :, 1]  # extracting only the saturation channel of the HSV image
+    gray_img = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)         # turn image into grayscale
+    hsv_img = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)           # turn image into HSV
+    sat_img = hsv_img[:, :, 1]                              # extracting only the saturation channel of the HSV image
     h, w = template_gray.shape
 
     resultGray = cv2.matchTemplate(gray_img, template_gray, cv2.TM_CCOEFF_NORMED)
-    locGray = np.where(resultGray >= threshGray)  # filter out bad matches
-    for pt in zip(*locGray[::-1]):  # save all matches to a list
+    locGray = np.where(resultGray >= threshGray)            # filter out bad matches
+    for pt in zip(*locGray[::-1]):                          # save all matches to a list
         matches.append([pt[0], pt[1]])
 
     resultSat = cv2.matchTemplate(sat_img, template_sat, cv2.TM_CCOEFF_NORMED)
-    locSat = np.where(resultSat >= threshSat)  # filter out bad matches
-    for pt in zip(*locSat[::-1]):  # add all matches to the list
+    locSat = np.where(resultSat >= threshSat)               # filter out bad matches
+    for pt in zip(*locSat[::-1]):                           # add all matches to the list
         matches.append([pt[0], pt[1]])
 
-    matches.sort(key=lambda y: int(y[1]))  # sort the matched points by y coordinate
+    matches.sort(key=lambda y: int(y[1]))                   # sort the matched points by y coordinate
     filteredMatches = remove_duplicates(matches)
     collinearMatches, pole_inclination = find_collinear(filteredMatches)
-    print(len(collinearMatches))
-    #draw_rectangle(im, matches, w, h, (150, 250, 255), 1)
-    #draw_rectangle(im, filteredMatches, w, h, (0, 255, 0), 1)
-    #draw_rectangle(im, collinearMatches, w, h, (0, 0, 255), 1)
-    #cv2.imshow('im',im)
-    #cv2.waitKey(1)
     if len(collinearMatches) > 0:
         return collinearMatches
 
