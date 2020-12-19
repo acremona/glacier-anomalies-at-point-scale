@@ -1,6 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/rtgmc/badge/?version=latest)](https://rtgmc.readthedocs.io/en/latest/?badge=latest)
 
-# real-time glacier mass changes
+# Determine Real-Time Glacier Mass Changes from Camera Images
 
 This project aims to set up a framework that is able to process series of camera images and automatically calculate a mass balance from them. Specifically, coloured tapes on metal poles are to be detected and tracked using computer vision algorithms.
 The basic framework consists of the open source library [openCV](https://opencv.org/) in Python. This project contains two independent algorithms based on the openCV funtions matchTemplate and meanShift.
@@ -30,6 +30,7 @@ x, displacements, conversion factors = mT_Hist.matchTemplate_hist("myfolder", "t
 ## How to run Algorithm 2: matchTemplate with meanShift
 
 ## Documentation
-The documentation is hosted here: https://rtgmc.readthedocs.io/en/latest/ [![Documentation Status](https://readthedocs.org/projects/rtgmc/badge/?version=latest)](https://rtgmc.readthedocs.io/en/latest/?badge=latest)
+The documentation is hosted here: https://rtgmc.readthedocs.io/en/latest/ 
+[![Documentation Status](https://readthedocs.org/projects/rtgmc/badge/?version=latest)](https://rtgmc.readthedocs.io/en/latest/?badge=latest)
 
 
