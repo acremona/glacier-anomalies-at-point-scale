@@ -18,7 +18,7 @@ scikit-learn~=0.23.2
 ```
 
 ## How to run Algorithm 1: matchTemplate with histograms
-1. Download or clone repository
+1. Download or clone repository, install dependencies
 2. Create blank .py file
 3. Import required script and run function
 ```python
