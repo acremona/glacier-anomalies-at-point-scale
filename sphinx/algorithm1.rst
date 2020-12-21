@@ -59,13 +59,11 @@ Important instructions for the image series
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The whole time series is a set of images in a folder. This folder is given the function as an input. The following criteria should be met:
 
-* The import order is alphabetical. This is unproblematic if the filename convention is followed.
-* The filenames must be timestamps in the following format: yyyy-mm-dd_hh-mm (e.g. 2019-06-27_11-59.jpg) other image file types are also allowed
+* The filenames must be timestamps in the following format: yyyy-mm-dd_hh-mm (e.g. 2019-06-27_11-59.jpg) other image file types are also allowed.
 * The algorithm is tested and optimized for time intervals of 20 minutes between images. Different intervals are generally possible (yet untested), but the displacements between two images must not exceed 4 cm.
 * Footage from installation work at the beginning of the time series must be removed. The first image should only contain the installed pole.
 * The initial position of the pole should preferably cover already the whole image height and not only the very bottom.
-* Dark/blurry images do not have to be removed if the period of bad image quality is not too long ( > 2 days )
-* Displacements during data gaps longer than 1 day will not be calculated correctly and have to be added manually.
+* Displacements during data gaps with more than 4 cm displacement will not be calculated correctly and have to be added manually.
 
 Important instructions for the chosen threshold
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

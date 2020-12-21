@@ -4,7 +4,7 @@ Algorithm 2: matchTemplate with meanShift
 How to run:
 
 1. Install dependencies and requirements
-2. Select a set of images (at least 100 images) with good lighting condition distributed during the hole period, and copy them into one folder. This calibration set of images will be used to calculate an appropriate conversion factor (to convert displacements from pixel to meter)
+2. Select a set of images (at least 100 images) with good lighting condition distributed during the whole period, and copy them into one folder. This calibration set of images will be used to calculate an appropriate conversion factor (to convert displacements from pixel to meter)
 3. Select a set of templates (about a dozen) as explained in https://rtgmc.readthedocs.io/en/latest/algorithm1.html#important-instructions-for-the-template-image and save them into one folder
 4. Import the script and run the main script, i.e. mT_mS.py with following inputs:
 
@@ -61,10 +61,7 @@ Since this algorithm works with colors to track tapes, the following functions a
 
 Recommendations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Run the algorithm with at least 10 different templates (template is a sensitive variable)
-
-* If possible build the stations in such a way that lighting condition are goods, i.e. colors are well recognizable and the
-contrast is not too high
-
-* By comparing the results of different templates, as well as results of Algorithm 1, some erroneus results may be filtered
-out thus obtaining better performances
+* If possible build the stations in such a way that lighting condition are goods, i.e. colors are well recognizable and the contrast is not too high
+* By comparing the results of different templates, as well as results of Algorithm 1, some erroneous results may be filtered out thus obtaining better performances
