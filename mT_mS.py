@@ -135,60 +135,60 @@ def find_conversion_factor(img):
 
 
 
-# actual program starts
-a_list = []
-b_list = []
-
-# load image time series, set for calibration of conversion factor and templates
-images, times, time = load_good_images_from_folder(path)
-cal_set, _, _ = load_good_images_from_folder(path_cal)
-templ, _, _ = load_good_images_from_folder(path_template)
-
-# calculation of a and b coefficients within the calibration set of images (images with good lighting conditions)
-for cal in cal_set:
-        a, b = find_conversion_factor(cal)
-        a_list.append(a)
-        b_list.append(b)
-
-a = np.nanmedian(a_list)
-b = np.nanmedian(b_list)
-print(a, b)
-
-print('Lenght of image time series: ',len(images))
-x_coord = np.arange(len(images))
-
-for count, tem in enumerate(templ):
-    h, w = tem.shape[0], tem.shape[1]
-
-    dy_cal_0 = [0]
-    dy_cal = mS_same_frame(images, times, a, b, tem, h, w)
-    dy_cal = dy_cal_0 + dy_cal
-    dy_cal = dy_cal[0:len(dy_cal)-1]
-    dy, std, count_lost = mS_different_frames(images, times, a, b, tem, h, w, dy_cal)
-    dy = np.asarray(dy)
-
-    # calculate standard deviation of cumulative sum according to gaussian error propagation (eq. 9)
-    stdcum = []
-    for i, s in enumerate(std):
-        if i == 0:
-            stdcum.append(std[0])
-        else:
-            err = math.pow(stdcum[i-1],2) + math.pow(std[i],2)*10
-            if err != 0:
-                stdcum.append(math.sqrt(err))
-            else:
-                stdcum.append(0)
-
-    dycum = np.nancumsum(dy)
-
-    print('Total displacement :',dycum[-1], ' pm ', stdcum[-1], ' m')
-    print('Object could not be tracked in ',count_lost, ' frames ')
-
-    # saving data into excel
-    df = pd.DataFrame({'time': times, 'rate': dy, 'std dev': std, 'dy cum': dycum, ' std dev cum': stdcum, 'count lost': count_lost})
-    df.to_excel(writer, sheet_name = 'sheet ' + str(count))
-
-writer.save()
-cv2.waitKey(1)
-
-cv2.destroyAllWindows()
+# # actual program starts
+# a_list = []
+# b_list = []
+#
+# # load image time series, set for calibration of conversion factor and templates
+# images, times, time = load_good_images_from_folder(path)
+# cal_set, _, _ = load_good_images_from_folder(path_cal)
+# templ, _, _ = load_good_images_from_folder(path_template)
+#
+# # calculation of a and b coefficients within the calibration set of images (images with good lighting conditions)
+# for cal in cal_set:
+#         a, b = find_conversion_factor(cal)
+#         a_list.append(a)
+#         b_list.append(b)
+#
+# a = np.nanmedian(a_list)
+# b = np.nanmedian(b_list)
+# print(a, b)
+#
+# print('Lenght of image time series: ',len(images))
+# x_coord = np.arange(len(images))
+#
+# for count, tem in enumerate(templ):
+#     h, w = tem.shape[0], tem.shape[1]
+#
+#     dy_cal_0 = [0]
+#     dy_cal = mS_same_frame(images, times, a, b, tem, h, w)
+#     dy_cal = dy_cal_0 + dy_cal
+#     dy_cal = dy_cal[0:len(dy_cal)-1]
+#     dy, std, count_lost = mS_different_frames(images, times, a, b, tem, h, w, dy_cal)
+#     dy = np.asarray(dy)
+#
+#     # calculate standard deviation of cumulative sum according to gaussian error propagation (eq. 9)
+#     stdcum = []
+#     for i, s in enumerate(std):
+#         if i == 0:
+#             stdcum.append(std[0])
+#         else:
+#             err = math.pow(stdcum[i-1],2) + math.pow(std[i],2)*10
+#             if err != 0:
+#                 stdcum.append(math.sqrt(err))
+#             else:
+#                 stdcum.append(0)
+#
+#     dycum = np.nancumsum(dy)
+#
+#     print('Total displacement :',dycum[-1], ' pm ', stdcum[-1], ' m')
+#     print('Object could not be tracked in ',count_lost, ' frames ')
+#
+#     # saving data into excel
+#     df = pd.DataFrame({'time': times, 'rate': dy, 'std dev': std, 'dy cum': dycum, ' std dev cum': stdcum, 'count lost': count_lost})
+#     df.to_excel(writer, sheet_name = 'sheet ' + str(count))
+#
+# writer.save()
+# cv2.waitKey(1)
+#
+# cv2.destroyAllWindows()
