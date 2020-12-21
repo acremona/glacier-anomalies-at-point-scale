@@ -23,7 +23,7 @@ scikit-learn~=0.23.2
 3. Import required script and run function
 ```python
 import mT_Hist
-x, displacements, conversion factors = mT_Hist.matchTemplate_hist("myfolder", "template.jpg", 0.70, wait=1, vis=False, plotting=False, csv=True)
+x, displacements, conversion_factors = mT_Hist.matchTemplate_hist("myfolder", "template.jpg", 0.70, wait=1, vis=False, plotting=False, csv=True)
 ```
 4. Analyze output.csv or plot return values
 
