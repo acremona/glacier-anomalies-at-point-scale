@@ -11,8 +11,8 @@ def yellow(image):
         Image of which the mask is wanted.
     Returns
     -------
-        ndarray
-            The mask for yellow color of the image.
+    mask: ndarray
+        Mask for yellow color of the image.
     """
     low_yellow = np.array([20., 80., 0.])
     upper_yellow = np.array([50., 255., 255.])
@@ -30,8 +30,8 @@ def red(image):
 
     Returns
     -------
-        ndarray
-            The mask for red color of the image.
+    mask: ndarray
+        Mask for red color of the image.
     """
 
     low_red = np.array([0., 80., 0.])
@@ -52,8 +52,8 @@ def green(image):
 
     Returns
     -------
-        ndarray
-            The mask for green color of the image.
+    mask: ndarray
+        Mask for green color of the image.
     """
 
     low_green = np.array([40., 80., 0.])
@@ -72,8 +72,8 @@ def blue(image):
 
     Returns
     -------
-        ndarray
-            The mask for blue color of the image.
+    mask: ndarray
+        Mask for blue color of the image.
     """
 
     low_blue = np.array([90., 80., 0.])
@@ -92,11 +92,11 @@ def black(image):
 
     Returns
     -------
-        ndarray
-            The mask for black color of the image.
+    mask: ndarray
+        Mask for black color of the image.
     """
 
     low_black = np.array([0., 0., 0.])
-    upper_black = np.array([180., 255.,50.])
+    upper_black = np.array([180., 255., 50.])
     mask = cv2.inRange(image, low_black, upper_black)
     return mask

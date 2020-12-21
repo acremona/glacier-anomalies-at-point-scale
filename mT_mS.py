@@ -9,20 +9,10 @@ from mS import mS_different_frames, mS_same_frame
 from mask import red, yellow, blue, green, black
 from sklearn.linear_model import LinearRegression
 
-"""
-Main code for the Algorithm 2: matchTemplate with meanShift (mT with mS).
-In the first step the image series is imported with the function load_good_images_from_folder.py.
-In the second step the a and b coefficients used later in the calculation of the conversion factor are calculated with
-function find_conversion_factor.py.
-Finally the combination of matchTemplate and meanShift is applied to the time series to calculate the displacement. With 
-the function mean_shift_same_frame.py offset deriving from a not perfectly centered template are identified (and later
-corrected). With the function mean_shift_diff_frames.py the actual displacement is calculated for the hole series of 
-images.
-"""
 
 ########################################################################################################
 path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1006"                    # path to folder with images
-path_cal = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\calibration_1006"    # path to folder with images to calibrateconversion factor
+path_cal = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\calibration_1006"    # path to folder with images to calibrate conversion factor
 path_template = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\templates"      # path to folder with templates
 threshNigth = 50                                                                    # darkness threshold to remove night images
 wait = 1                                                                            # time between every frame in ms, 0 for manual scrolling

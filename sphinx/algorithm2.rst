@@ -4,14 +4,8 @@ Algorithm 2: matchTemplate with meanShift
 How to run:
 
 1. Install dependencies and requirements
-
-2. Select a set of images (at least 100 images) with good lighting condition distributed during the hole period,
-and copy them into one folder. This calibration set of images will be used to calculate an appropriate
-conversion factor (to convert displacements from pixel to meter)
-
-3. Select a set of templates (about a dozen) as explained in https://rtgmc.readthedocs.io/en/latest/algorithm1.html#important-instructions-for-the-template-image and
-and save them into one folder.
-
+2. Select a set of images (at least 100 images) with good lighting condition distributed during the hole period, and copy them into one folder. This calibration set of images will be used to calculate an appropriate conversion factor (to convert displacements from pixel to meter)
+3. Select a set of templates (about a dozen) as explained in https://rtgmc.readthedocs.io/en/latest/algorithm1.html#important-instructions-for-the-template-image and save them into one folder
 4. Import the script and run the main script, i.e. mT_mS.py with following inputs:
 
 * path: select the path to the folder with image time series
