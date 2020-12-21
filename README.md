@@ -28,7 +28,15 @@ x, displacements, conversion_factors = mT_Hist.matchTemplate_hist("myfolder", "t
 4. Analyze output.csv or plot return values
 
 ## How to run Algorithm 2: matchTemplate with meanShift
+1. Install dependencies and requirements
+2. Select a set of images (at least 100 images) with good lighting condition distributed during the hole period,
+and copy them into one folder.
+3. Select a set of templates (about a dozen) and save them into one folder.
+4. Import the script and run the main script, i.e. mT_mS.py with following inputs:
 
+* path: select the path to the folder with image time series
+* path_cal: select the path to folder with calibration set of images (step 2 from above)
+* path_template: select the path to the folder with templates (step 3 from above)
 ## Documentation
 The documentation is hosted here: https://rtgmc.readthedocs.io/en/latest/ 
 [![Documentation Status](https://readthedocs.org/projects/rtgmc/badge/?version=latest)](https://rtgmc.readthedocs.io/en/latest/?badge=latest)
