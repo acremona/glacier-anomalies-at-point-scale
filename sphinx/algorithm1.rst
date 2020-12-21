@@ -35,8 +35,9 @@ Generally, the following criteria should be met to generate good results:
 * The represented tape should have a high contrast to the background (no white, grey, yellow)
 * The represented tape should have a high saturation (no white, black, grey, dark blue)
 * The represented tape should be located in the middle of the pole, so the distortion differences are minimized.
-* The template should contain a small margin on all edges.
+* The template should contain a small margin on all edges
 * The size of the represented tape must be the same as in the original image. It is recommended to create the template by cropping a full image, so there is no resizing.
+* The represented tape should be in the center of the template image (no offset), so that underestimates resp. overestimates are reduced
 
 Simply put, the template should be as representative as possible compared to all tapes, all images, all exposures. If the pole is always inclined for the whole time series, the tape on the template should be inclined as well.
 Ideally, the color of the tape in the template is red, because the contrast as well as the saturation is high.

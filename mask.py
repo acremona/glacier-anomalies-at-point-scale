@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+
 def yellow(image):
     """Creates a mask for yellow color.
 
@@ -17,6 +18,7 @@ def yellow(image):
     upper_yellow = np.array([50., 255., 255.])
     mask = cv2.inRange(image, low_yellow, upper_yellow)
     return mask
+
 
 def red(image):
     """Creates a mask for red color.
@@ -39,6 +41,7 @@ def red(image):
     mask = cv2.inRange(image, low_red, upper_red) + cv2.inRange(image, low2, up2)
     return mask
 
+
 def green(image):
     """Creates a mask for green color.
 
@@ -57,6 +60,7 @@ def green(image):
     upper_green = np.array([80., 255., 255.])
     mask = cv2.inRange(image, low_green, upper_green)
     return mask
+
 
 def blue(image):
     """Creates a mask for blue color.

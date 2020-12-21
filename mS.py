@@ -12,7 +12,7 @@ threshold = -0.002
 
 def mS_same_frame(images, times, a, b, template, h, w):
     """
-    This function recalls the matchTemplate and meanShift (of openCV) functions on the same frame to calculate eventual
+    This function recalls the matchTemplate and meanShift functions on the same frame to calculate eventual
     offsets of the templates (which will be later corrected).
 
     Parameters
@@ -24,8 +24,8 @@ def mS_same_frame(images, times, a, b, template, h, w):
     a: float
         Slope of the function used to convert displacements into metric unit.
     b: float
-        y-intercecpt of the function used to convert displacements into metric unit.
-    template: ndarray
+        Y-intercecpt of the function used to convert displacements into metric unit.
+    template: opencv-image
         Template used to identify the tapes.
     h: int
         Height of the track window.
@@ -173,26 +173,40 @@ def mS_same_frame(images, times, a, b, template, h, w):
 
 
 def mS_different_frames(images, times, a, b, template, h, w, dy_cal):
-    """Tracks two objects within a series of images.
+    """
+    This function recalls the matchTemplate function in one frame (to find the initial location of the tapes) and
+    meanShift to track tapes into the consecutive frame. Displacement of tapes between two frames is calculated and
+    cumulated over the hole series.
 
     Parameters
     ----------
-    roi1: ndarray
-       Region of interest including the first object (stripe) to track
-    roi2: ndarray
-        Region of interest including the second object (stripe) to track
     images: list
-        List of images within the two objects are tracked
-    track_window: tuple:4
-        Initial search window for the first object
-    track_window2: tuple:4
-        Initial search window for the second object
+        Time series of images.
+    times: list
+        List of time differences for every image to the first image in hours. e.g. [0, 0.5, 1.0, ...]
+    a: float
+        Slope of the function used to convert displacements into metric unit.
+    b: float
+        Y-intercecpt of the function used to convert displacements into metric unit.
+    template: opencv-image
+        Template used to identify the tapes.
+    h: int
+        Height of the track window.
+    w: int
+        Width of the track window
+    dy_cal: list
+        Offsets of the templates.
 
     Returns
     -------
-        None
-            It have still to be changed!!
+    dy_list: list
+        Cumulative displacements for every image in m.
+    std_list: list
+        Cumulative standar deviation for every image in m.
+    count_nomatches_notrack: int
+        Number of images for which the displacement could not be calculated (value of 0 is assigned).
     """
+
     #print("[info] meanshift running ...")
     # initialization of some variables
     count_no_matches = 0

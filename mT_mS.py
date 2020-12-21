@@ -33,7 +33,7 @@ writer = pd.ExcelWriter('temp.xlsx', engine='xlsxwriter')
 def load_good_images_from_folder(folder):
     """
     Function loading the image series inside a specified folder. File names must contain date and time with delimiters
-    - or _. Aquisition taken during night are filtered out with help of a darkness threshold.
+    - or _. Acquisition taken during night are filtered out with help of a darkness threshold.
 
     Parameters
     ----------
@@ -81,14 +81,20 @@ def load_good_images_from_folder(folder):
 
 def find_conversion_factor(img):
     """
+    Calculate a (slope) and b (y-intercept) of the function that describes tape height in function of its position in
+    the image (because of image distortion).
 
     Parameters
     ----------
-    img:
+    img: opencv-image
+        Image containing the stake with tapes.
 
     Returns
     -------
-
+    a: float
+        Slope of the function.
+    b: float
+        Y-intercept of the function (in px).
     """
     kernel = np.ones((2, 2))                                                            # define kernel used for morphological application
     kernel2 = np.ones((3, 3))

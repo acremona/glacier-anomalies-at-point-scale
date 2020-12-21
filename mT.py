@@ -5,8 +5,8 @@ import math
 threshGray = 0.7  # threshold to match template in grayscale, 1 for perfect match, 0 for no match
 threshSat = 0.8  # threshold to match template in HSV saturation channel, 1 for perfect match, 0 for no match
 wait = 2  # time between every frame in ms, 0 for manual scrolling
-threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
-threshDuplicate = 25                      # threshold to find duplicates within matches (in pixel)
+threshAngle = 2  # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
+threshDuplicate = 25  # threshold to find duplicates within matches (in pixel)
 
 
 def find_collinear(points):
@@ -128,19 +128,19 @@ def remove_duplicates(points):
 
 
 
-def match_template(im,temp):
+def match_template(im, temp):
     """Finds areas of an image that match (are similar) to a template image.
 
     Parameters
     ----------
-    im: ndarray
+    im: openncv-image
        (Source image) The image in which we expect to find a match to the template image.
-    temp: ndarray
+    temp: opencv-image
         (Template image) The image which will be compared to the source image.
     Returns
     -------
-        list
-            The coordinates of the matching points found (Left uppermost corner of the ROI).
+    collinearMatches: list
+        The coordinates of the matching points found (Left uppermost corner of the ROI).
     """
 
     print("[info] matchtemplate running ...")
@@ -153,7 +153,6 @@ def match_template(im,temp):
     gray_img = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)         # turn image into grayscale
     hsv_img = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)           # turn image into HSV
     sat_img = hsv_img[:, :, 1]                              # extracting only the saturation channel of the HSV image
-    h, w = template_gray.shape
 
     resultGray = cv2.matchTemplate(gray_img, template_gray, cv2.TM_CCOEFF_NORMED)
     locGray = np.where(resultGray >= threshGray)            # filter out bad matches
