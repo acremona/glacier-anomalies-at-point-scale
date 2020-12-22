@@ -130,26 +130,21 @@ def find_conversion_factor(img):
         return np.nan, np.nan
 
 
-
-# actual program starts
-a_list = []
-b_list = []
-
 # load image time series, set for calibration of conversion factor and templates
 images, times, time = load_good_images_from_folder(path)
 cal_set, _, _ = load_good_images_from_folder(path_cal)
 templ, _, _ = load_good_images_from_folder(path_template)
 
 # calculation of a and b coefficients within the calibration set of images (images with good lighting conditions)
+a_list = []
+b_list = []
 for cal in cal_set:
         a, b = find_conversion_factor(cal)
         a_list.append(a)
         b_list.append(b)
-
 a = np.nanmedian(a_list)
 b = np.nanmedian(b_list)
 print(a, b)
-
 print('Lenght of image time series: ',len(images))
 x_coord = np.arange(len(images))
 

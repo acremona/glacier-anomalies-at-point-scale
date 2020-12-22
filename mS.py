@@ -237,7 +237,7 @@ def mS_different_frames(images, times, a, b, template, h, w, dy_cal):
             if window_number >= 1:
                 for i, hsv_ro in enumerate(roi):
                     if ret[i]!=0:
-                        dst[i] = cv2.calcBackProject([hsv], [0, 1], roi_hist_list[i], [0, 180, 0, 256], 1) # calculation of histogram backprojection
+                        dst[i] = cv2.calcBackProject([hsv], [0, 1], roi_hist_list[i], [0, 180, 0, 256], 1)  # calculation of histogram backprojection
 
                         # Filtering and morphological transformation of backprojection
                         _, dst[i] = cv2.threshold(dst[i], 0.85 * np.max(dst[i]), 255, cv2.THRESH_TOZERO)

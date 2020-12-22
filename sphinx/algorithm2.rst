@@ -8,7 +8,7 @@ How to run:
 3. Select a set of templates (about a dozen) as explained in https://rtgmc.readthedocs.io/en/latest/algorithm1.html#important-instructions-for-the-template-image and save them into one folder
 4. Import the script and run the main script, i.e. mT_mS.py with following inputs:
 
-* path: select the path to the folder with image time series
+* path: select the path to the folder with image time series (see https://rtgmc.readthedocs.io/en/latest/algorithm1.html#important-instructions-for-the-image-series)
 * path_cal: select the path to folder with calibration set of images (step 2 from above)
 * path_template: select the path to the folder with templates (step 3 from above)
 
@@ -19,7 +19,7 @@ The workflow of the algorithm is as follow:
 .. automodule:: mT_mS
     :members: load_good_images_from_folder
 
-2. The parameters (a, b) of the function used to convert displacements into metric unit are calculated for the images in
+2. The parameters (a, b) of the function used to convert displacements into metric unit are calculated from the images in
 the calibration set (good lighting conditions) with the following function:
 
 .. automodule:: mT_mS
