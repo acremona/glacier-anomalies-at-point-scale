@@ -143,8 +143,6 @@ def match_template(im, temp):
         The coordinates of the matching points found (Left uppermost corner of the ROI).
     """
 
-    print("[info] matchtemplate running ...")
-
     template_gray = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
     template_hsv = cv2.cvtColor(temp, cv2.COLOR_BGR2HSV)    # turn template into HSV
     template_sat = template_hsv[:, :, 1]                    # extracting only the saturation channel of the HSV template

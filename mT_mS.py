@@ -6,13 +6,13 @@ import math
 import imutils
 import pandas as pd
 from mS import mS_different_frames, mS_same_frame
-from mask import red, yellow, blue, green, black
+from mask import red, yellow, blue, green
 from sklearn.linear_model import LinearRegression
 
 
 ########################################################################################################
-path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1006"                    # path to folder with images
-path_cal = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\calibration_1006"    # path to folder with images to calibrate conversion factor
+path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1007"                    # path to folder with images
+path_cal = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\calibration_1007"    # path to folder with images to calibrate conversion factor
 path_template = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\templates"      # path to folder with templates
 threshNigth = 50                                                                    # darkness threshold to remove night images
 wait = 1                                                                            # time between every frame in ms, 0 for manual scrolling
