@@ -28,6 +28,7 @@ Requirements
    PyQt5~=5.15.1
    pandas~=1.1.3
    scikit-learn~=0.23.2
+   XlsxWriter~=1.3.7
 
 Indices and tables
 ==================
