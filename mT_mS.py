@@ -11,12 +11,12 @@ from sklearn.linear_model import LinearRegression
 
 
 ########################################################################################################
-path = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\1007"                    # path to folder with images
-path_cal = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\calibration_1007"    # path to folder with images to calibrate conversion factor
-path_template = "C:\\Users\\User\\Desktop\\Eth\\MasterIII\\Project\\templates"      # path to folder with templates
+path = "C:\\Users\\Aaron\\Documents\\Holfuy\\2021\\1006"                    # path to folder with images
+#path_cal = "C:\\Users\\Aaron\\Documents\\Holfuy\\2021\\1002_cal"    # path to folder with images to calibrate conversion factor
+path_template = "C:\\Users\\Aaron\\Documents\\Holfuy\\2021\\templates"      # path to folder with templates
 threshNigth = 50                                                                    # darkness threshold to remove night images
 wait = 1                                                                            # time between every frame in ms, 0 for manual scrolling
-writer = pd.ExcelWriter('temp.xlsx', engine='xlsxwriter')
+writer = pd.ExcelWriter('C:\\Users\\Aaron\\Documents\\Holfuy\\2021\\automatic_reading\\temp.xlsx', engine='xlsxwriter')
 ########################################################################################################
 
 
@@ -43,7 +43,19 @@ def load_good_images_from_folder(folder):
     images = []
     times = []
     hours = []
-    for filename in os.listdir(folder):
+
+    first_date = '2021-06-29_05-40'
+    final_date = '2021-09-29_09-28'
+
+    skip_dt = 1
+    for i,filename in enumerate(os.listdir(folder)):
+
+        if (filename < first_date or filename > final_date) and 'template' not in filename:
+            continue
+
+        if i % skip_dt != 0:
+            continue
+
         image = cv2.imread(os.path.join(folder, filename))
 
         gray = cv2.imread(os.path.join(folder, filename),0)
@@ -130,21 +142,29 @@ def find_conversion_factor(img):
         return np.nan, np.nan
 
 
-# load image time series, set for calibration of conversion factor and templates
-images, times, time = load_good_images_from_folder(path)
-cal_set, _, _ = load_good_images_from_folder(path_cal)
-templ, _, _ = load_good_images_from_folder(path_template)
-
-# calculation of a and b coefficients within the calibration set of images (images with good lighting conditions)
-a_list = []
-b_list = []
-for cal in cal_set:
+def median_conversion_factor(images):
+    a_list = []
+    b_list = []
+    for cal in images:
         a, b = find_conversion_factor(cal)
         a_list.append(a)
         b_list.append(b)
-a = np.nanmedian(a_list)
-b = np.nanmedian(b_list)
-print(a, b)
+
+    a = np.nanmedian(a_list)
+    b = np.nanmedian(b_list)
+    print('a, b :' ,a, b)
+    return a,b
+
+# load image time series, set for calibration of conversion factor and templates
+images, times, time = load_good_images_from_folder(path)
+#cal_set, _, _ = load_good_images_from_folder(path_cal)
+templ, _, _ = load_good_images_from_folder(path_template)
+
+print(len(templ), 'templates')
+# calculation of a and b coefficients within the calibration set of images (images with good lighting conditions)
+
+a0,b0 = median_conversion_factor(images[0:100])
+
 print('Lenght of image time series: ',len(images))
 x_coord = np.arange(len(images))
 
@@ -152,10 +172,10 @@ for count, tem in enumerate(templ):
     h, w = tem.shape[0], tem.shape[1]
 
     dy_cal_0 = [0]
-    dy_cal = mS_same_frame(images, times, a, b, tem, h, w)
+    dy_cal = mS_same_frame(images, times, a0, b0, tem, h, w)
     dy_cal = dy_cal_0 + dy_cal
     dy_cal = dy_cal[0:len(dy_cal)-1]
-    dy, std, count_lost = mS_different_frames(images, times, a, b, tem, h, w, dy_cal)
+    dy, std, count_lost = mS_different_frames(images, times, a0, b0, tem, h, w, dy_cal)
     dy = np.asarray(dy)
 
     # calculate standard deviation of cumulative sum according to gaussian error propagation (eq. 9)

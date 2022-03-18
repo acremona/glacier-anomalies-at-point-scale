@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import datetime
 
 
-def load_images_from_folder(folder):
+def load_images_from_folder(folder, first_date, end_date=None):
     """
     function loading all image files inside a specified folder. File names must contain date and time with delimiters - or _
 
@@ -26,7 +26,16 @@ def load_images_from_folder(folder):
     print("Images loading...")
     images = []
     times = []
+    #first_date = '2020-07-26_06-07'
+
     for filename in sorted(os.listdir(folder)):
+        if filename < first_date:
+            continue
+
+        if end_date is not None:
+            if filename > end_date:
+                continue
+
         image = cv2.imread(os.path.join(folder, filename))
         if image is not None:
             images.append(image)
@@ -310,6 +319,7 @@ def compare_matches(matches, inclination, delta):
     else:
         print("No matches found within the last 20 frames!")
         delta = 0
+        print('lost')
     return displacement, delta
 
 
@@ -428,7 +438,8 @@ def px_to_cm(px, ref_cm, ref_px):
     """
     return px/ref_px*ref_cm
 
-def matchTemplate_hist(folder_path, template_path, thresh, wait=1, vis=False, plotting=False, csv=True):
+
+def matchTemplate_hist(folder_path, template_path, thresh,first_date, end_date=None, wait=1, vis=False, plotting=False, csv=True):
     """
     Main function for Algorithm 1 (MatchTemplate with Histograms).
 
@@ -470,10 +481,10 @@ def matchTemplate_hist(folder_path, template_path, thresh, wait=1, vis=False, pl
     threshDuplicate = 25                        # threshold to find duplicates within matches (in pixel)
     threshAngle = 2                             # threshold to check if matches are on straight line (a.k.a. the pole) in degrees
     threshTracking = 3                          # threshold to catch match from last frame (in pixel)
-    tape_height = 1.9                           # height of tape in cm
+    tape_height = 2.0                           # height of tape in cm
     tape_spacing = 4.0                          # distance between two tapes in cm (center to center)
     ########################################################################################################
-    images, times = load_images_from_folder(folder_path)
+    images, times = load_images_from_folder(folder_path, first_date, end_date)
     visualize = vis
     template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
     template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
@@ -542,6 +553,7 @@ def matchTemplate_hist(folder_path, template_path, thresh, wait=1, vis=False, pl
             if frame_nr > 0:                            # special case for 1st frame because no displacement can be calculated there.
                 frame_disp, delta = compare_matches(all_matches, pole_inclination, 1)
                 if frame_disp != 0:
+                    print(frame_disp)
                     x.append(times[frame_nr])
                     all_scales.append(scale)
                     rough_scale = np.median(all_scales)
@@ -569,10 +581,10 @@ def matchTemplate_hist(folder_path, template_path, thresh, wait=1, vis=False, pl
         if visualize:
             cv2.imshow("img", res_img)
             cv2.waitKey(wait)
-
     # cv2.destroyAllWindows()
-
+    print(total_displacement[-1])
     total_displacement, smooth_scales = clean_scales(daily_displacements, all_scales, 100)
+    #smooth_scales = all_scales
 
     if csv:
         conversion_factors = [tape_spacing / val for val in smooth_scales]
