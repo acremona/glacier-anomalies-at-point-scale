@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import os
 
+
 def import_climatology(path):
     head = pd.read_csv(
         path, sep=';', skiprows=2, skipinitialspace=True,
