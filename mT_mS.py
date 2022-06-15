@@ -11,7 +11,7 @@ from sklearn.linear_model import LinearRegression
 
 
 ########################################################################################################
-path = "C:\\Users\\Aaron\\Documents\\Holfuy\\2021\\1006"                    # path to folder with images
+path = "C:\\Users\\Aaron\\Documents\\Holfuy\\2019\\1002"                    # path to folder with images
 #path_cal = "C:\\Users\\Aaron\\Documents\\Holfuy\\2021\\1002_cal"    # path to folder with images to calibrate conversion factor
 path_template = "C:\\Users\\Aaron\\Documents\\Holfuy\\2021\\templates"      # path to folder with templates
 threshNigth = 50                                                                    # darkness threshold to remove night images
