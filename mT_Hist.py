@@ -5,6 +5,7 @@ import math
 import pyqtgraph as pg
 import matplotlib.pyplot as plt
 import datetime
+from pyqtgraph.Qt import QtGui
 
 
 def load_images_from_folder(folder, first_date, end_date=None):
@@ -485,6 +486,7 @@ def matchTemplate_hist(folder_path, template_path, thresh,first_date, end_date=N
     tape_spacing = 4.0                          # distance between two tapes in cm (center to center)
     ########################################################################################################
     images, times = load_images_from_folder(folder_path, first_date, end_date)
+    print('ooo', times)
     visualize = vis
     template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)  # turn template into grayscale
     template_hsv = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)    # turn template into HSV
@@ -503,6 +505,8 @@ def matchTemplate_hist(folder_path, template_path, thresh,first_date, end_date=N
 
     all_matches = []                                            # list where all matches of all frames will be safed
     total_displacement = []                                     # list for plotting where all cumulative displacements will be stored
+    past_mean_disp = []
+    x_datetime = []
     daily_displacements = []
     x = []                                                      # x coordinate for plotting
     scale_array = []
@@ -510,8 +514,24 @@ def matchTemplate_hist(folder_path, template_path, thresh,first_date, end_date=N
     if plotting:
         win = pg.GraphicsWindow()                                   # initialize plotting
         pw = win.addPlot()
+        pw.addLegend()
+
+        label_style = {'color': '#EEE', 'font-size': '18pt'}
+        pw.setLabel('bottom', "Time [Hours]", **label_style)
+        pw.setLabel('left', "Daily mass balance [cm]", **label_style)
+
+        font = QtGui.QFont()
+        font.setPixelSize(20)
+        pw.getAxis("bottom").tickFont = font
+
+        pw.getAxis("bottom").setStyle(tickFont=font)
+        pw.getAxis("left").setStyle(tickFont=font)
+
+        #pw.setAxisItems({'bottom': pg.DateAxisItem()})
+
         # pc = win.addPlot()
         disp = pw.plot()
+        #disp.setData([0], [5], symbolBrush=('r'))
         # sc = pc.plot()
         # st_n = pc.plot()
         # st_p = pc.plot()
@@ -565,8 +585,30 @@ def matchTemplate_hist(folder_path, template_path, thresh,first_date, end_date=N
                         total_displacement.append(px_to_cm(frame_disp, tape_spacing, scale))
                         daily_displacements.append((frame_disp, 0))
                     # print("Displacement: " + str(px_to_cm(frame_disp, tape_spacing, scale)) + " cm. Total: " + str(total_displacement[-1]) + " cm.")
+                    # #tweet mod=True
+                    # #tweet if mod:
+                    # #tweet   total_displacement[-1] = total_displacement[-1] + 0.0035
+
                     if plotting:
-                        disp.setData(x, total_displacement, symbolBrush=('b'))
+                        # x_datetime.append(datetime.datetime(year=2022, month=7, day=9, hour=5, minute=32) + datetime.timedelta(hours=times[frame_nr])) #'2022-07-09_05-32'
+                        # print(x_datetime)
+                        # #tweet if x[-1]%24 == 0:
+                        # #tweet   print('x', x[-1], datetime.datetime(year=2022, month=7, day=13, hour=5, minute=32) + datetime.timedelta(hours=times[frame_nr]), 'tot disp', total_displacement[-1])
+                        # #tweet   total_displacement[-1]= 0
+                        # #tweet   #total_displacement[-2] = -(total_displacement[-1] - total_displacement[-2])/2
+                        # #tweet else:
+                        # #tweet   if x[-1] % 24 <= 0.3:
+                        # #tweet       print('x', x[-1], 'tot disp', total_displacement[-1])
+                        # #tweet      total_displacement[-1]= 0
+
+
+                        # #tweet past_mean_disp.append(5.81)
+                        # #tweet pw.addLegend()
+                        # #tweet disp = pw.plot()
+                         disp.setData(x, total_displacement, symbolBrush=('b'))
+                        # #tweet pw.addLegend()
+                        # #tweet disp = pw.plot()
+                        # #tweet disp.setData(x, past_mean_disp, pen='r')
                         # sc.setData(x, all_scales, symbolBrush=('g'))
                         # std = np.std(all_scales)
                         # avg = np.average(all_scales)
@@ -579,8 +621,20 @@ def matchTemplate_hist(folder_path, template_path, thresh,first_date, end_date=N
             print("No matches found in current frame!")
 
         if visualize:
+            # #tweet if frame_nr==0:
+            # #tweet    cv2.imshow("img", res_img)
+            # #tweet   cv2.waitKey(0)
+
+            # #tweet cv2.putText(res_img, str(datetime.datetime(year=2022, month=7, day=13, hour=5, minute=32) + datetime.timedelta(hours=times[frame_nr]))
+            # #tweet           , (5, 700), cv2.FONT_HERSHEY_SIMPLEX,
+            # #tweet           1, (0, 0, 0), 2, cv2.LINE_AA)
             cv2.imshow("img", res_img)
             cv2.waitKey(wait)
+
+            # #tweet if datetime.datetime(year=2022, month=7, day=13, hour=5, minute=32) + datetime.timedelta(hours=times[frame_nr]) > datetime.datetime(year=2022, month=7, day=19, hour=15, minute=00) and datetime.datetime(year=2022, month=7, day=13, hour=5, minute=32) + datetime.timedelta(hours=times[frame_nr]) < datetime.datetime(year=2022, month=7, day=19, hour=15, minute=40):
+            # #tweet   total_displacement[-1] = total_displacement[-2]
+            # #tweet   print('hi')
+
     # cv2.destroyAllWindows()
     print(total_displacement[-1])
     total_displacement, smooth_scales = clean_scales(daily_displacements, all_scales, 100)
