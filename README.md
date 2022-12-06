@@ -3,7 +3,7 @@
 # Determine Real-Time Glacier Mass Changes from Camera Images
 
 This project aims to set up a framework that is able to process series of camera images and automatically calculate a mass balance from them. Specifically, coloured tapes on metal poles are to be detected and tracked using computer vision algorithms.
-The basic framework consists of the open source library [openCV](https://opencv.org/) in Python. This project contains two independent algorithms based on the openCV funtions matchTemplate and meanShift.
+The basic framework consists of the open source library [openCV](https://opencv.org/) in Python. This project contains two independent algorithms based on the openCV funtion matchTemplate.
 
 ## Requirements
 ```python
